@@ -38,7 +38,7 @@ export default function Sidebar() {
       <button onClick={() => setIsOpen(!isOpen)} className="p-3 flex items-center gap-3 hover:bg-gray-700 w-full transition">
   <Menu size={16} />
   <span className={`text-sm font-semibold tracking-wide transition-all ${isOpen ? "opacity-100" : "opacity-0 w-0"}`}>
-    SIB Keliangau Bible Tracker
+    SIB Keliangau
   </span>
 </button>
 
