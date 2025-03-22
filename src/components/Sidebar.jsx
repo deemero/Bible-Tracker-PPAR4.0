@@ -1,165 +1,79 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Home, BookOpen, BarChart, Settings, Menu, LogOut } from "lucide-react";
-import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
+import { Home, Book, BarChart, Settings, Menu, LogOut } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
-import { useRouter } from "next/navigation";
 
-const Sidebar = ({ isOpen, toggleSidebar }) => {
-    const [user, setUser] = useState(null);
-    const router = useRouter();
+export default function Sidebar() {
+  const [isOpen, setIsOpen] = useState(true);
+  const [user, setUser] = useState(null);
+  const router = useRouter();
+  const pathname = usePathname();
 
-    useEffect(() => {
-        const getUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            setUser(user);
-        };
-        getUser();
-    }, []);
-
-    const handleLogout = async () => {
-        await supabase.auth.signOut();
-        router.push("/auth/signin");
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
     };
+    getUser();
 
-    return (
-        <aside
-            className={`h-screen bg-gray-900 text-white fixed left-0 top-0 transition-all duration-300 z-40
-            ${isOpen ? "w-56" : "w-16"}`}
-        >
-            {/* Button Toggle */}
-            <button
-                onClick={toggleSidebar}
-                className="p-3 flex items-center gap-2 hover:bg-gray-700 w-full transition"
-            >
-                <Menu size={24} />
-                {isOpen && <span className="text-lg">Menu</span>}
-            </button>
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+      router.refresh();
+    });
 
-            {/* Navigation Items */}
-            <nav className="mt-4 flex flex-col space-y-2">
-                <SidebarItem icon={<Home size={24} />} text="Home" href="/" isOpen={isOpen} />
-                <SidebarItem icon={<BookOpen size={24} />} text="Reading Progress" href="/reading-progress" isOpen={isOpen} />
-                <SidebarItem icon={<BarChart size={24} />} text="Leaderboard" href="/leaderboard" isOpen={isOpen} />
-                <SidebarItem icon={<Settings size={24} />} text="Settings" href="/settings" isOpen={isOpen} />
-            </nav>
+    return () => authListener.subscription.unsubscribe();
+  }, []);
 
-            {/* Logout Button (hanya jika user log masuk) */}
-            {user && (
-                <button
-                    onClick={handleLogout}
-                    className="p-3 flex items-center gap-2 hover:bg-red-700 w-full transition mt-6"
-                >
-                    <LogOut size={24} />
-                    {isOpen && <span className="text-lg">Logout</span>}
-                </button>
-            )}
-        </aside>
-    );
-};
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    router.push("/auth/signin");
+  }
 
-const SidebarItem = ({ icon, text, href, isOpen }) => {
-    return (
-        <Link
-            href={href}
-            className="flex items-center gap-4 p-3 hover:bg-gray-700 transition rounded-lg"
-        >
-            {icon}
-            {isOpen && <span className="text-lg">{text}</span>}
-        </Link>
-    );
-};
+  if (!user) return null;
 
-const Layout = ({ children }) => {
-    const [isOpen, setIsOpen] = useState(true);
+  return (
+    <aside className={`h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white fixed top-0 transition-all duration-300 shadow-xl z-40 ${isOpen ? "w-64" : "w-13"} flex flex-col`}>
+      {/* Button Toggle */}
+      <button onClick={() => setIsOpen(!isOpen)} className="p-3 flex items-center gap-3 hover:bg-gray-700 w-full transition">
+  <Menu size={16} />
+  <span className={`text-sm font-semibold tracking-wide transition-all ${isOpen ? "opacity-100" : "opacity-0 w-0"}`}>
+    SIB Keliangau Bible Tracker
+  </span>
+</button>
 
-    const toggleSidebar = () => {
-        setIsOpen((prev) => !prev);
-    };
+      {/* Navigation Items */}
+      <nav className="mt-6 flex flex-col space-y-3">
+        <SidebarItem icon={<Home size={24} />} text="Home" href="/" isOpen={isOpen} pathname={pathname} />
+        <SidebarItem icon={<Book size={24} />} text="Reading Progress" href="/reading-progress" isOpen={isOpen} pathname={pathname} />
+        <SidebarItem icon={<BarChart size={24} />} text="Leaderboard" href="/leaderboard" isOpen={isOpen} pathname={pathname} />
+        <SidebarItem icon={<Settings size={24} />} text="Settings" href="/settings" isOpen={isOpen} pathname={pathname} />
+      </nav>
 
-    return (
-        <div className="flex">
-            <Sidebar isOpen={isOpen} toggleSidebar={toggleSidebar} />
-            <main
-                className={`flex-1 p-6 transition-all duration-300 ${isOpen ? "ml-56" : "ml-16"}`}
-            >
-                {children}
-            </main>
-        </div>
-    );
-};
+      {/* Logout Button */}
+      <button onClick={handleLogout} className="mt-auto p-3 flex items-center gap-3 hover:bg-red-700 w-full transition text-red-400 hover:text-white">
+        <LogOut size={24} />
+        <span className={`text-lg font-medium transition-all ${isOpen ? "opacity-100" : "opacity-0 w-0"}`}>Logout</span>
+      </button>
+    </aside>
+  );
+}
 
-export default Layout;
+function SidebarItem({ icon, text, href, isOpen, pathname }) {
+  const router = useRouter();
+  const isActive = pathname === href;
 
-
-
-// "use client";
-// import { useState } from "react";
-// import { Home, BookOpen, BarChart, Settings, Menu } from "lucide-react";
-// import Link from "next/link";
-
-// const Sidebar = ({ isOpen, toggleSidebar }) => {
-//     return (
-//         <aside
-//         className={`h-screen bg-gray-900 text-white fixed left-0 top-0 transition-all duration-300 z-40
-//             ${isOpen ? "w-56" : "w-16"}`}
-//     >
-    
-    
-//             {/* Button Toggle */}
-//             <button
-//                 onClick={toggleSidebar}
-//                 className="p-3 flex items-center gap-2 hover:bg-gray-700 w-full transition"
-//             >
-//                 <Menu size={24} />
-//                 {isOpen && <span className="text-lg">Menu</span>}
-//             </button>
-
-//             {/* Navigation Items */}
-//             <nav className="mt-4 flex flex-col space-y-2">
-//                 <SidebarItem icon={<Home size={24} />} text="Home" href="/" isOpen={isOpen} />
-//                 <SidebarItem icon={<BookOpen size={24} />} text="Reading Progress" href="/reading-progress" isOpen={isOpen} />
-//                 <SidebarItem icon={<BarChart size={24} />} text="Leaderboard" href="/leaderboard" isOpen={isOpen} />
-//                 <SidebarItem icon={<Settings size={24} />} text="Settings" href="/settings" isOpen={isOpen} />
-//             </nav>
-//         </aside>
-//     );
-// };
-
-// const SidebarItem = ({ icon, text, href, isOpen }) => {
-//     return (
-//         <Link
-//             href={href}
-//             className="flex items-center gap-4 p-3 hover:bg-gray-700 transition rounded-lg"
-//         >
-//             {icon}
-//             {isOpen && <span className="text-lg">{text}</span>}
-//         </Link>
-//     );
-// };
-
-// const Layout = ({ children }) => {
-//     const [isOpen, setIsOpen] = useState(true);
-
-//     const toggleSidebar = () => {
-//         setIsOpen((prev) => !prev);
-//         console.log("Sidebar state:", !isOpen);  // Debugging
-//     };
-
-//     return (
-//         <div className="flex">
-//             <Sidebar isOpen={isOpen} toggleSidebar={toggleSidebar} />
-
-//             {/* Main content bergerak ikut sidebar */}
-//             <main
-//     className={`flex-1 p-6 transition-all duration-300
-//         ${isOpen ? "ml-56" : "ml-16"}`}
-// >
-
-//                 {children}
-//             </main>
-//         </div>
-//     );
-// };
-
-// export default Layout;
+  return (
+    <button 
+      onClick={() => router.push(href)} 
+      className={`flex items-center gap-4 p-3 transition rounded-lg transform hover:scale-105 ${isActive ? "bg-blue-500 text-white" : "hover:bg-gray-700"} `}
+    >
+      <span className={`${isActive ? "text-white" : "text-gray-400"}`}>
+        {icon}
+      </span>
+      <span className={`text-lg font-medium transition-all ${isOpen ? "opacity-100" : "opacity-0 w-0"}`}>
+        {text}
+      </span>
+    </button>
+  );
+}
