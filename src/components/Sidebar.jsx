@@ -7,7 +7,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     return (
         <aside
             className={`h-screen bg-gray-900 text-white fixed left-0 top-0 transition-all duration-300 z-40
-                ${isOpen ? "w-64" : "w-20"}`}
+                ${isOpen ? "w-55" : "w-11"}`}
         >
             {/* Button Toggle */}
             <button
