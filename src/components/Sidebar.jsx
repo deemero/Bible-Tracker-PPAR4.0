@@ -1,13 +1,31 @@
 "use client";
-import { useState } from "react";
-import { Home, BookOpen, BarChart, Settings, Menu } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Home, BookOpen, BarChart, Settings, Menu, LogOut } from "lucide-react";
 import Link from "next/link";
+import { supabase } from "@/lib/supabaseClient";
+import { useRouter } from "next/navigation";
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
+    const [user, setUser] = useState(null);
+    const router = useRouter();
+
+    useEffect(() => {
+        const getUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            setUser(user);
+        };
+        getUser();
+    }, []);
+
+    const handleLogout = async () => {
+        await supabase.auth.signOut();
+        router.push("/auth/signin");
+    };
+
     return (
         <aside
             className={`h-screen bg-gray-900 text-white fixed left-0 top-0 transition-all duration-300 z-40
-                ${isOpen ? "w-55" : "w-11"}`}
+            ${isOpen ? "w-56" : "w-16"}`}
         >
             {/* Button Toggle */}
             <button
@@ -25,6 +43,17 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 <SidebarItem icon={<BarChart size={24} />} text="Leaderboard" href="/leaderboard" isOpen={isOpen} />
                 <SidebarItem icon={<Settings size={24} />} text="Settings" href="/settings" isOpen={isOpen} />
             </nav>
+
+            {/* Logout Button (hanya jika user log masuk) */}
+            {user && (
+                <button
+                    onClick={handleLogout}
+                    className="p-3 flex items-center gap-2 hover:bg-red-700 w-full transition mt-6"
+                >
+                    <LogOut size={24} />
+                    {isOpen && <span className="text-lg">Logout</span>}
+                </button>
+            )}
         </aside>
     );
 };
@@ -45,17 +74,14 @@ const Layout = ({ children }) => {
     const [isOpen, setIsOpen] = useState(true);
 
     const toggleSidebar = () => {
-        setIsOpen(!isOpen);
+        setIsOpen((prev) => !prev);
     };
 
     return (
         <div className="flex">
             <Sidebar isOpen={isOpen} toggleSidebar={toggleSidebar} />
-
-            {/* Main content bergerak ikut sidebar */}
             <main
-                className={`flex-1 p-6 transition-all duration-300
-                    ${isOpen ? "ml-64" : "ml-20"}`}
+                className={`flex-1 p-6 transition-all duration-300 ${isOpen ? "ml-56" : "ml-16"}`}
             >
                 {children}
             </main>
@@ -64,3 +90,76 @@ const Layout = ({ children }) => {
 };
 
 export default Layout;
+
+
+
+// "use client";
+// import { useState } from "react";
+// import { Home, BookOpen, BarChart, Settings, Menu } from "lucide-react";
+// import Link from "next/link";
+
+// const Sidebar = ({ isOpen, toggleSidebar }) => {
+//     return (
+//         <aside
+//         className={`h-screen bg-gray-900 text-white fixed left-0 top-0 transition-all duration-300 z-40
+//             ${isOpen ? "w-56" : "w-16"}`}
+//     >
+    
+    
+//             {/* Button Toggle */}
+//             <button
+//                 onClick={toggleSidebar}
+//                 className="p-3 flex items-center gap-2 hover:bg-gray-700 w-full transition"
+//             >
+//                 <Menu size={24} />
+//                 {isOpen && <span className="text-lg">Menu</span>}
+//             </button>
+
+//             {/* Navigation Items */}
+//             <nav className="mt-4 flex flex-col space-y-2">
+//                 <SidebarItem icon={<Home size={24} />} text="Home" href="/" isOpen={isOpen} />
+//                 <SidebarItem icon={<BookOpen size={24} />} text="Reading Progress" href="/reading-progress" isOpen={isOpen} />
+//                 <SidebarItem icon={<BarChart size={24} />} text="Leaderboard" href="/leaderboard" isOpen={isOpen} />
+//                 <SidebarItem icon={<Settings size={24} />} text="Settings" href="/settings" isOpen={isOpen} />
+//             </nav>
+//         </aside>
+//     );
+// };
+
+// const SidebarItem = ({ icon, text, href, isOpen }) => {
+//     return (
+//         <Link
+//             href={href}
+//             className="flex items-center gap-4 p-3 hover:bg-gray-700 transition rounded-lg"
+//         >
+//             {icon}
+//             {isOpen && <span className="text-lg">{text}</span>}
+//         </Link>
+//     );
+// };
+
+// const Layout = ({ children }) => {
+//     const [isOpen, setIsOpen] = useState(true);
+
+//     const toggleSidebar = () => {
+//         setIsOpen((prev) => !prev);
+//         console.log("Sidebar state:", !isOpen);  // Debugging
+//     };
+
+//     return (
+//         <div className="flex">
+//             <Sidebar isOpen={isOpen} toggleSidebar={toggleSidebar} />
+
+//             {/* Main content bergerak ikut sidebar */}
+//             <main
+//     className={`flex-1 p-6 transition-all duration-300
+//         ${isOpen ? "ml-56" : "ml-16"}`}
+// >
+
+//                 {children}
+//             </main>
+//         </div>
+//     );
+// };
+
+// export default Layout;

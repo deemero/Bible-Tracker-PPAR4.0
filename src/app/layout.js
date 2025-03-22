@@ -1,6 +1,5 @@
-
-import Sidebar from "../components/Sidebar";
 import "./globals.css";
+import ClientWrapper from "../components/ClientWrapper";
 
 export const metadata = {
   title: "Dashboard",
@@ -11,12 +10,51 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className="flex">
-        <Sidebar />
-        <main className="flex-1 p-6 transition-all duration-300 ml-20 md:ml-64">{children}</main>
+        <ClientWrapper>{children}</ClientWrapper>
       </body>
     </html>
   );
 }
+
+// import "./globals.css";
+// import ClientLayout from "../components/ClientLayout";
+
+// export const metadata = {
+//   title: "Dashboard",
+//   description: "Sidebar Example",
+// };
+
+// export default function RootLayout({ children }) {
+//   return (
+//     <html lang="en">
+//       <body className="flex">
+//         <ClientLayout>{children}</ClientLayout>
+//       </body>
+//     </html>
+//   );
+// }
+
+
+
+// import Sidebar from "../components/Sidebar";
+// import "./globals.css";
+
+// export const metadata = {
+//   title: "Dashboard",
+//   description: "Sidebar Example",
+// };
+
+// export default function RootLayout({ children }) {
+//   return (
+//     <html lang="en">
+//       <body className="flex">
+//         <Sidebar />
+//         <main className="flex-1 p-6 transition-all duration-300 ml-20 md:ml-64">{children}</main>
+//       </body>
+//     </html>
+//   );
+// }
+// import { Geist, Geist_Mono } from "next/font/google";
 // import "./globals.css";
 
 // const geistSans = Geist({
@@ -44,4 +82,3 @@ export default function RootLayout({ children }) {
 //       </body>
 //     </html>
 //   );
-// }
