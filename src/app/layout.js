@@ -1,7 +1,7 @@
-
 // src/app/layout.js
 import "../globals.css";
 import ClientLayout from "@/components/ClientLayout";
+
 
 export const metadata = {
   title: "Bible Tracker",
@@ -10,13 +10,14 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body>
-        <ClientLayout>{children}</ClientLayout>
+    <html lang="en" suppressHydrationWarning>
+      <body className="bg-background text-foreground">
+      <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );
 }
+
 
 
 

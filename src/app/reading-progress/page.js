@@ -70,7 +70,7 @@ export default function ReadingProgressHome() {
 
       {bibleBooks.map(section => (
         <div key={section.section} className="mb-8">
-          <h2 className="text-xl font-semibold mb-2">{section.section}</h2>
+          <h2 className="text-xl text-black font-semibold mb-2">{section.section}</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {section.books.map(book => {
               const slug = book.name.toLowerCase().replace(/\s+/g, "-");

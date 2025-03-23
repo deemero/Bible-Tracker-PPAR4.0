@@ -5,12 +5,8 @@ import "../../globals.css";
 
 export default function AuthLayout({ children }) {
   return (
-    <html lang="en">
-      <body>
-        <main className="flex items-center justify-center min-h-screen bg-white">
-          {children}
-        </main>
-      </body>
-    </html>
+    <main className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900">
+      {children}
+    </main>
   );
 }
