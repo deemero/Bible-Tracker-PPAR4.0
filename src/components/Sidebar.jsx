@@ -33,16 +33,16 @@ export default function Sidebar() {
   if (!user) return null;
 
   return (
-    <aside className={`h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white fixed top-0 transition-all duration-300 shadow-xl z-40 ${isOpen ? "w-64" : "w-13"} flex flex-col`}>
-      {/* Button Toggle */}
+    <aside className={`h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white fixed top-0 left-0 transition-all duration-300 shadow-xl z-40 ${isOpen ? "w-64" : "w-16"} flex flex-col`}>
+      {/* Toggle Button */}
       <button onClick={() => setIsOpen(!isOpen)} className="p-3 flex items-center gap-3 hover:bg-gray-700 w-full transition">
-  <Menu size={16} />
-  <span className={`text-sm font-semibold tracking-wide transition-all ${isOpen ? "opacity-100" : "opacity-0 w-0"}`}>
-    SIB Keliangau
-  </span>
-</button>
+        <Menu size={16} />
+        <span className={`text-sm font-semibold tracking-wide transition-all duration-200 ${isOpen ? "opacity-100" : "opacity-0 w-0"}`}>
+          SIB Keliangau
+        </span>
+      </button>
 
-      {/* Navigation Items */}
+      {/* Navigation */}
       <nav className="mt-6 flex flex-col space-y-3">
         <SidebarItem icon={<Home size={24} />} text="Home" href="/" isOpen={isOpen} pathname={pathname} />
         <SidebarItem icon={<Book size={24} />} text="Reading Progress" href="/reading-progress" isOpen={isOpen} pathname={pathname} />
@@ -50,7 +50,7 @@ export default function Sidebar() {
         <SidebarItem icon={<Settings size={24} />} text="Settings" href="/settings" isOpen={isOpen} pathname={pathname} />
       </nav>
 
-      {/* Logout Button */}
+      {/* Logout */}
       <button onClick={handleLogout} className="mt-auto p-3 flex items-center gap-3 hover:bg-red-700 w-full transition text-red-400 hover:text-white">
         <LogOut size={24} />
         <span className={`text-lg font-medium transition-all ${isOpen ? "opacity-100" : "opacity-0 w-0"}`}>Logout</span>

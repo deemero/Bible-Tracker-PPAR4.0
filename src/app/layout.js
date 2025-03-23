@@ -1,4 +1,4 @@
-// RootLayout.js
+// app/layout.js
 import "./globals.css";
 import SidebarWrapper from "../components/SidebarWrapper";
 
@@ -12,7 +12,8 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body className="flex">
         <SidebarWrapper />
-        <main className="w-full min-h-screen flex justify-center items-center p-4">
+        {/* Content bergerak ikut lebar sidebar */}
+        <main className="min-h-screen flex-1 p-4 ml-16 sm:ml-64 transition-all duration-300">
           {children}
         </main>
       </body>
