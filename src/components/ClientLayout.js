@@ -1,15 +1,16 @@
-"use client"; 
+"use client";
+
 import { usePathname } from "next/navigation";
-import Sidebar from "./Sidebar";
+import SidebarWrapper from "./SidebarWrapper";
 
 export default function ClientLayout({ children }) {
   const pathname = usePathname();
-  const hideSidebar = pathname === "/signin"; // Hide sidebar on Signin page
+  const isAuthPage = pathname.startsWith("/auth");
 
   return (
-    <div className="flex">
-      {!hideSidebar && <Sidebar />}
-      <main className={`flex-1 p-6 transition-all duration-300 ${hideSidebar ? "" : "ml-20 md:ml-64"}`}>
+    <div className="min-h-screen flex bg-gray-100">
+      {!isAuthPage && <SidebarWrapper />}
+      <main className={`flex-1 p-4 transition-all duration-300 ${!isAuthPage ? 'ml-16 sm:ml-64' : 'flex items-center justify-center'}`}>
         {children}
       </main>
     </div>

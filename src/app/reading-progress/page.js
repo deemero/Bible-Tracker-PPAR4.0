@@ -53,15 +53,17 @@ export default function ReadingProgressHome() {
 
   return (
     <div className="w-full max-w-5xl mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold text-center mb-2">Progress Pembacaan Alkitab</h1>
+<h1 className="text-2xl font-bold text-center mb-2 text-black">
+  Progress Pembacaan Alkitab
+</h1>
 
       {/* ✅ Overall Progress */}
-      <p className="text-center text-sm text-black-700 mb-1">
+      <p className="text-center text-sm text-black mb-1">
         Progress Seluruh Alkitab: {overallProgress}%
       </p>
-      <div className="w-full bg-gray-300 h-4 rounded-full overflow-hidden mb-6">
+      <div className="w-full bg-black/20 h-4 rounded-full overflow-hidden mb-6">
         <div
-          className="bg-green-500 h-full transition-all duration-500"
+          className="bg-black h-full transition-all duration-500"
           style={{ width: `${overallProgress}%` }}
         />
       </div>
@@ -81,12 +83,12 @@ export default function ReadingProgressHome() {
                   className="p-4 rounded-lg border hover:bg-blue-600 hover:text-white transition text-sm bg-white text-black shadow-sm"
                 >
                   <div className="font-semibold">{book.name}</div>
-                  <div className="text-xs text-gray-600">
+                  <div className="text-xs text-black/60">
                     Progress: {progress}%
                   </div>
-                  <div className="w-full bg-gray-300 h-2 rounded mt-1">
+                  <div className="w-full bg-black/20 h-2 rounded mt-1">
                     <div
-                      className="h-full bg-green-500 rounded"
+                      className="h-full bg-black rounded"
                       style={{ width: `${progress}%` }}
                     />
                   </div>

@@ -68,7 +68,7 @@ export default function BookProgressPage() {
       {/* Butang Kembali */}
       <button
         onClick={() => router.push("/reading-progress")}
-        className="mb-4 px-4 py-2 bg-white text-black font-semibold rounded hover:bg-gray-200 shadow transition"
+        className="mb-4 px-4 py-2 bg-black text-black font-semibold rounded hover:bg-gray-200 shadow transition"
       >
         ← Kembali ke senarai kitab
       </button>

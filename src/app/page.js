@@ -53,7 +53,10 @@ export default function Home() {
 
   return (
     <div className="w-full max-w-2xl mx-auto px-4 py-8 text-center">
-      <h1 className="text-2xl font-bold mb-2">Selamat datang, {userName || "Guest"}!</h1>
+<h1 className="text-2xl font-bold text-black mb-2">
+  Selamat datang, {userName || "Guest"}!
+</h1>
+
 
       <p className="text-sm text-gray-600 mb-2">Overall Bible Reading Progress:</p>
       <p className="text-xl font-bold mb-4 text-black">{overallProgress}%</p>
