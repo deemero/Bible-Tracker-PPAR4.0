@@ -32,7 +32,7 @@ export default function LeaderboardPage() {
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto px-4 py-6 text-black">
+    <div className="w-full max-w-5xl mx-auto px-4 py-6 text-white">
       <h1 className="text-2xl font-bold text-center mb-6">📊 Leaderboard</h1>
 
       <section className="mb-10">
