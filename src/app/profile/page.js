@@ -16,7 +16,7 @@ export default function Home() {
   const [recentActivity, setRecentActivity] = useState([]);
   const router = useRouter();
 
-  const totalChapters = bibleBooks.flatMap((sec) => sec.books).reduce((sum, book) => sum + book.chapters, 0);
+  const totalChapters = bibleBooks.flatMap(sec => sec.books).reduce((sum, book) => sum + book.chapters, 0);
 
   useEffect(() => {
     async function init() {
@@ -125,14 +125,14 @@ export default function Home() {
         <p className="text-sm text-gray-500">Welcome back to Bible Tracker ✨</p>
       </div>
 
-      {/* Stats Section */}
+      {/* 📊 Stats Section */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <StatCard icon={<TrendingUp size={20} />} label="Overall Progress" value={`${overallProgress}%`} />
         <StatCard icon={<CalendarCheck size={20} />} label="Monthly Ticked" value={`${monthlyProgress}%`} />
         <StatCard icon={<BarChart2 size={20} />} label="Ranking" value={`#${ranking} of ${totalUsers}`} />
       </div>
 
-      {/* Recent Activity */}
+      {/* 📚 Recent Activity */}
       <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 shadow-md">
         <h2 className="text-lg font-semibold mb-4">Recent Chapters</h2>
         <ul className="text-sm space-y-2">

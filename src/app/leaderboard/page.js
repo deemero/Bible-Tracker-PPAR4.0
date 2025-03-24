@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import Image from "next/image";
 
 export default function LeaderboardPage() {
   const [tab, setTab] = useState("overall");
@@ -43,7 +44,17 @@ export default function LeaderboardPage() {
                 key={index}
                 className="flex flex-col items-center bg-white rounded-xl p-4 shadow-md border"
               >
-                <div className="w-16 h-16 rounded-full bg-gray-300 mb-2" />
+                {user.avatar_url ? (
+                  <Image
+                    src={user.avatar_url}
+                    alt="Avatar"
+                    width={64}
+                    height={64}
+                    className="rounded-full mb-2 object-cover"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-gray-300 mb-2" />
+                )}
                 <div className="text-sm font-semibold text-gray-700 mb-1">#{index + 1}</div>
                 <div className="font-bold text-lg text-black">{user.username}</div>
                 <div className="text-xs text-gray-500 mb-1">{user.chapters_read} Bab</div>
@@ -59,7 +70,17 @@ export default function LeaderboardPage() {
             <div key={index + 3} className="flex items-center gap-4 p-3 rounded-lg bg-white shadow">
               <div className="text-lg font-bold w-6">{index + 4}</div>
               <div className="flex-shrink-0">
-                <div className="w-10 h-10 rounded-full bg-gray-300" />
+                {user.avatar_url ? (
+                  <Image
+                    src={user.avatar_url}
+                    alt="Avatar"
+                    width={40}
+                    height={40}
+                    className="rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-gray-300" />
+                )}
               </div>
               <div className="flex-1">
                 <div className="font-medium text-black">{user.username}</div>
