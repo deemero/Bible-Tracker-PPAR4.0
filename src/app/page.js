@@ -70,22 +70,15 @@ export default function Home() {
       .from("reading_progress")
       .select("user_id, is_read")
       .eq("is_read", true);
-  
-    if (error) {
-      console.error("Error fetching progress data:", error);
-      return;
-    }
-  
-    // Kira total chapters dibaca oleh setiap user
+
+    if (error) return console.error("Error fetching progress data:", error);
+
     const userProgressMap = {};
     for (const row of progressData) {
-      if (!userProgressMap[row.user_id]) {
-        userProgressMap[row.user_id] = 0;
-      }
+      if (!userProgressMap[row.user_id]) userProgressMap[row.user_id] = 0;
       userProgressMap[row.user_id]++;
     }
-  
-    // Convert ke array & sort ikut chapters read
+
     const sorted = Object.entries(userProgressMap)
       .map(([user_id, chapters_read]) => ({
         user_id,
@@ -93,18 +86,17 @@ export default function Home() {
         progress_percentage: Math.round((chapters_read / totalChapters) * 100),
       }))
       .sort((a, b) => b.progress_percentage - a.progress_percentage);
-  
+
     const index = sorted.findIndex((user) => user.user_id === uid);
     if (index !== -1) {
       setRanking(index + 1);
       setTotalUsers(sorted.length);
     } else {
-      // Kalau user tiada data bacaan langsung
       setRanking(sorted.length + 1);
       setTotalUsers(sorted.length + 1);
     }
   };
-  
+
   const getRecentReads = async (uid) => {
     const { data, error } = await supabase
       .from("reading_progress")
@@ -118,15 +110,17 @@ export default function Home() {
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4 py-8">
-      {/* Profile Header */}
-      <div className="bg-black rounded-xl p-6 text-white shadow-md mb-6">
-        <div className="flex items-center gap-4">
-          <UserCircle size={48} />
-          <div>
-            <h1 className="text-xl font-bold">Selamat datang, {userName}!</h1>
-            <p className="text-sm text-gray-300">Welcome back to Bible Tracker ✨</p>
-          </div>
+      {/* Profile Card Modern */}
+      <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 text-center flex flex-col items-center">
+        <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-md mb-3">
+          <img
+            src="https://via.placeholder.com/150"
+            alt="Profile"
+            className="w-full h-full object-cover"
+          />
         </div>
+        <h1 className="text-xl font-bold text-black">Selamat datang, {userName}!</h1>
+        <p className="text-sm text-gray-500">Welcome back to Bible Tracker ✨</p>
       </div>
 
       {/* Stats Section */}
