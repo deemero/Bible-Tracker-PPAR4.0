@@ -50,7 +50,7 @@ export default function LeaderboardPage() {
                     alt="Avatar"
                     width={64}
                     height={64}
-                    className="rounded-full mb-2 object-cover"
+                    className="rounded-full object-cover w-16 h-16 mb-2"
                   />
                 ) : (
                   <div className="w-16 h-16 rounded-full bg-gray-300 mb-2" />
@@ -76,7 +76,7 @@ export default function LeaderboardPage() {
                     alt="Avatar"
                     width={40}
                     height={40}
-                    className="rounded-full object-cover"
+                    className="rounded-full object-cover w-10 h-10"
                   />
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-gray-300" />
@@ -133,7 +133,7 @@ export default function LeaderboardPage() {
         ))}
       </div>
 
-      {/* Content */}
+      {/* ✅ Content */}
       {tab === "overall" && renderList(overallLeaders)}
       {tab === "monthly" && renderList(monthlyLeaders)}
       {tab === "all" && renderList(allUsers)}
