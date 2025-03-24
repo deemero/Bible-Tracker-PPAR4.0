@@ -4,12 +4,31 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { bibleBooks } from "@/lib/bibleData";
 
+// Komponen untuk progress bar cantik
+function FancyProgressBar({ value }) {
+  const getColor = (val) => {
+    if (val < 30) return "bg-gray-400";
+    if (val < 60) return "bg-yellow-400";
+    if (val < 80) return "bg-green-300";
+    return "bg-green-500";
+  };
+
+  return (
+    <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+      <div
+        className={`h-full rounded-full transition-all duration-500 ease-out ${getColor(value)}`}
+        style={{ width: `${value}%` }}
+      />
+    </div>
+  );
+}
+
 export default function ReadingProgressHome() {
   const [userId, setUserId] = useState(null);
   const [progressMap, setProgressMap] = useState({});
   const [overallProgress, setOverallProgress] = useState(0);
 
-  const totalChapters = bibleBooks.flatMap(sec => sec.books).reduce((sum, book) => sum + book.chapters, 0); // = 1189
+  const totalChapters = bibleBooks.flatMap(sec => sec.books).reduce((sum, book) => sum + book.chapters, 0);
 
   useEffect(() => {
     const fetchUserAndProgress = async () => {
@@ -53,19 +72,16 @@ export default function ReadingProgressHome() {
 
   return (
     <div className="w-full max-w-5xl mx-auto px-4 py-6">
-<h1 className="text-2xl font-bold text-center mb-2 text-black">
-  Progress Pembacaan Alkitab
-</h1>
+      <h1 className="text-2xl font-bold text-center mb-2 text-black">
+        Progress Pembacaan Alkitab
+      </h1>
 
       {/* ✅ Overall Progress */}
       <p className="text-center text-sm text-black mb-1">
         Progress Seluruh Alkitab: {overallProgress}%
       </p>
-      <div className="w-full bg-black/20 h-4 rounded-full overflow-hidden mb-6">
-        <div
-          className="bg-black h-full transition-all duration-500"
-          style={{ width: `${overallProgress}%` }}
-        />
+      <div className="mb-6">
+        <FancyProgressBar value={overallProgress} />
       </div>
 
       {bibleBooks.map(section => (
@@ -86,11 +102,8 @@ export default function ReadingProgressHome() {
                   <div className="text-xs text-black/60">
                     Progress: {progress}%
                   </div>
-                  <div className="w-full bg-black/20 h-2 rounded mt-1">
-                    <div
-                      className="h-full bg-black rounded"
-                      style={{ width: `${progress}%` }}
-                    />
+                  <div className="mt-1">
+                    <FancyProgressBar value={progress} />
                   </div>
                 </Link>
               );

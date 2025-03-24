@@ -1,3 +1,5 @@
+
+
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -7,13 +9,22 @@ export default function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false); // ⬅️ new
   const router = useRouter();
 
   async function handleSignIn(e) {
     e.preventDefault();
+    setLoading(true); // show loading
+    setError(null); // reset error
+
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return setError(error.message);
-    router.push("/");
+
+    if (error) {
+      setError(error.message);
+      setLoading(false); // reset loading
+    } else {
+      router.push("/");
+    }
   }
 
   return (
@@ -49,9 +60,22 @@ export default function SignIn() {
 
           <button
             type="submit"
-            className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition"
+            disabled={loading}
+            className={`w-full flex justify-center items-center gap-2 py-2 rounded-md transition ${
+              loading ? "bg-green-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"
+            } text-white`}
           >
-            Submit
+            {loading ? (
+              <>
+                <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="white" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="white" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                </svg>
+                Loading...
+              </>
+            ) : (
+              "Submit"
+            )}
           </button>
         </form>
 

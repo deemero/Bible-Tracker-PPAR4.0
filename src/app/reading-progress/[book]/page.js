@@ -63,17 +63,25 @@ export default function BookProgressPage() {
     fetchChapters(userId);
   };
 
+  // 🌈 Progress bar color
+  const getBarColor = (progress) => {
+    if (progress < 30) return "bg-gray-400";
+    if (progress < 60) return "bg-yellow-500";
+    if (progress < 80) return "bg-lime-500";
+    return "bg-green-500";
+  };
+
   return (
     <div className="w-full max-w-3xl mx-auto px-4 py-6">
       {/* Butang Kembali */}
       <button
         onClick={() => router.push("/reading-progress")}
-        className="mb-4 px-4 py-2 bg-black text-black font-semibold rounded hover:bg-gray-200 shadow transition"
+        className="mb-4 px-4 py-2 bg-black text-white font-semibold rounded hover:bg-gray-200 shadow transition"
       >
         ← Kembali ke senarai kitab
       </button>
 
-      <h1 className="text-2xl font-bold mb-2 text-center">
+      <h1 className="text-2xl text-black font-bold mb-2 text-center">
         Pembacaan: {selectedBook?.name}
       </h1>
 
@@ -83,13 +91,13 @@ export default function BookProgressPage() {
       </p>
       <div className="w-full bg-gray-300 h-3 rounded-full mb-6 overflow-hidden">
         <div
-          className="bg-green-500 h-full transition-all duration-300"
+          className={`h-full ${getBarColor(progress)} transition-all duration-300`}
           style={{ width: `${progress}%` }}
         />
       </div>
 
       {/* Chapter list */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 text-black sm:grid-cols-4 md:grid-cols-5 gap-3">
         {chapters.map((item) => (
           <label key={item.chapter} className="flex items-center gap-2 text-sm">
             <input
