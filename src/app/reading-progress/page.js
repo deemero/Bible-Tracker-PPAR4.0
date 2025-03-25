@@ -40,17 +40,19 @@ export default function ReadingProgressHome() {
     fetchUserAndProgress();
   }, []);
 
+
   const calculateProgress = async (uid) => {
     const { data, error } = await supabase
       .from("reading_progress")
       .select("book_name, chapter_number, is_read")
-      .eq("user_id", uid);
-
+      .eq("user_id", uid)
+      .limit(5000);
+  
     if (error) return console.error(error);
-
+  
     const grouped = {};
     let totalRead = 0;
-
+  
     for (const row of data) {
       if (!grouped[row.book_name]) grouped[row.book_name] = [];
       if (row.is_read) {
@@ -58,17 +60,17 @@ export default function ReadingProgressHome() {
         totalRead += 1;
       }
     }
-
+  
     const newProgress = {};
     bibleBooks.flatMap(sec => sec.books).forEach(book => {
       const readCount = grouped[book.name]?.length || 0;
       newProgress[book.name] = Math.round((readCount / book.chapters) * 100);
     });
-
+  
     setProgressMap(newProgress);
     setOverallProgress(Math.round((totalRead / totalChapters) * 100));
   };
-
+  
   return (
     <div className="w-full max-w-5xl mx-auto px-4 py-6">
       <h1 className="text-2xl font-bold text-center mb-2 text-gray-800">

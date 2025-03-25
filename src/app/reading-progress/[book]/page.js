@@ -33,25 +33,29 @@ export default function BookProgressPage() {
       .from("reading_progress")
       .select("chapter_number, is_read")
       .eq("user_id", uid)
-      .eq("book_name", selectedBook.name);
-
+      .eq("book_name", selectedBook.name)
+      .limit(5000);
+  
     if (error) return console.error(error);
-
-    const chapterMap = new Map(data.map(d => [d.chapter_number, d.is_read]));
+  
+    const chapterMap = new Map(data.map(d => [d.chapter_number, d.is_read === true]));
+  
     const updatedChapters = Array.from({ length: selectedBook.chapters }, (_, i) => {
       const chapterNumber = i + 1;
       return {
         chapter: chapterNumber,
-        is_read: chapterMap.get(chapterNumber) || false
+        is_read: chapterMap.has(chapterNumber) ? chapterMap.get(chapterNumber) : false
       };
     });
-
+  
     setChapters(updatedChapters);
     const readCount = updatedChapters.filter(c => c.is_read).length;
     const calculatedProgress = (readCount / selectedBook.chapters) * 100;
     setProgress(calculatedProgress);
     setShowCongrats(calculatedProgress === 100);
   };
+  
+
 
   const handleCheckboxChange = async (chapter, isChecked) => {
     if (!userId) return;
@@ -62,7 +66,7 @@ export default function BookProgressPage() {
         user_id: userId,
         book_name: selectedBook.name,
         chapter_number: chapter,
-        is_read: isChecked,
+        is_read: isChecked === true,
       }, { onConflict: ['user_id', 'book_name', 'chapter_number'] });
 
     fetchChapters(userId);
