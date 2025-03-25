@@ -20,7 +20,7 @@ export default function SettingsPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">
-      <h1 className="text-3xl font-bold text-center text-black mb-6">⚙️ Tetapan Aplikasi</h1>
+      <h1 className="text-3xl font-bold text-center text-black mb-6">⚙️ Settings</h1>
 
       {/* Language Toggle */}
       <section className="bg-white shadow rounded-xl p-6">

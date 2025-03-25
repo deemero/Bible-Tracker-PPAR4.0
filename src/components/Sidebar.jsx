@@ -46,16 +46,24 @@ export default function Sidebar() {
       <div className="flex items-center justify-between px-4 py-4 border-b border-gray-300">
         <button onClick={() => setIsOpen(!isOpen)} className="flex items-center gap-2 text-gray-700">
           <Menu size={20} />
-          {isOpen && <span className="text-sm font-semibold tracking-wide">SIB Keliangau</span>}
+          {isOpen && (
+  <div className="leading-tight">
+    <div className="text-sm font-semibold">Bible Project 4.0</div>
+    <div className="text-xs text-gray-600">Revival Generation</div>
+  </div>
+)}
+
         </button>
       </div>
 
       <nav className="flex-1 px-2 py-4 space-y-1">
-        <SidebarItem icon={<Home size={20} />} text="Home" href="/" isOpen={isOpen} pathname={pathname} />
-        <SidebarItem icon={<Book size={20} />} text="Reading Progress" href="/reading-progress" isOpen={isOpen} pathname={pathname} />
-        <SidebarItem icon={<BarChart size={20} />} text="Leaderboard" href="/leaderboard" isOpen={isOpen} pathname={pathname} />
-        <SidebarItem icon={<Settings size={20} />} text="Settings" href="/settings" isOpen={isOpen} pathname={pathname} />
-      </nav>
+  <SidebarItem icon={<Home size={20} />} text="Home" href="/" isOpen={isOpen} pathname={pathname} />
+  <SidebarItem icon={<Book size={20} />} text="Reading Progress" href="/reading-progress" isOpen={isOpen} pathname={pathname} />
+  <SidebarItem icon={<BarChart size={20} />} text="Leaderboard" href="/leaderboard" isOpen={isOpen} pathname={pathname} />
+  <SidebarItem icon={<Settings size={20} />} text="Settings" href="/settings" isOpen={isOpen} pathname={pathname} />
+  <SidebarItem icon={<Book size={20} />} text="Others" href="/others" isOpen={isOpen} pathname={pathname} />
+</nav>
+
 
       <div className="p-4 border-t border-gray-300">
         <button

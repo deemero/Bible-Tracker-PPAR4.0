@@ -121,8 +121,12 @@ export default function Home() {
         ) : (
           <div className="w-24 h-24 rounded-full bg-gray-300 mb-4" />
         )}
-        <h1 className="text-xl font-semibold text-gray-900">Selamat datang, {userName}!</h1>
-        <p className="text-sm text-gray-500">Welcome back to Bible Tracker ✨</p>
+   <h1 className="text-2xl font-bold text-gray-800">Hello {userName}!</h1>
+<p className="text-sm text-gray-500 tracking-wide">
+  Welcome back to <span className="font-semibold text-green-600">Bible Project 4.0</span> <br />
+  <span className="text-gray-600">Revival Generation</span>
+</p>
+
       </div>
 
       {/* ✅ Stats Cards */}
@@ -134,15 +138,15 @@ export default function Home() {
 
       {/* ✅ Recent Activity */}
       <div className="p-6 rounded-2xl shadow-md border border-green-100 mb-6 bg-[#b8e8d1]">
-  <h2 className="text-lg font-semibold mb-4 text-gray-100">Recent Chapters</h2>
+  <h2 className="text-lg font-semibold mb-4 text-white text-shadow">Recent Chapters</h2>
   <ul className="text-sm space-y-2">
     {recentActivity.map((item, index) => (
       <li
         key={index}
-        className="flex justify-between border-b border-green-200 pb-2 text-gray-100"
+        className="flex justify-between border-b border-green-200 pb-2 text-white text-shadow"
       >
         <span className="font-medium">{item.book_name} {item.chapter_number}</span>
-        <span className="text-xs text-gray-200">{new Date(item.inserted_at).toLocaleString()}</span>
+        <span className="text-xs text-white text-shadow">{new Date(item.inserted_at).toLocaleString()}</span>
       </li>
     ))}
   </ul>

@@ -72,11 +72,11 @@ export default function ReadingProgressHome() {
   return (
     <div className="w-full max-w-5xl mx-auto px-4 py-6">
       <h1 className="text-2xl font-bold text-center mb-2 text-gray-800">
-        Progress Pembacaan Alkitab
+      Bible Reading Progress
       </h1>
 
       <p className="text-center text-sm text-gray-700 mb-1">
-        Progress Seluruh Alkitab: {overallProgress}%
+      Progress Whole Bible: {overallProgress}%
       </p>
       <div className="mb-6">
         <FancyProgressBar value={overallProgress} />
