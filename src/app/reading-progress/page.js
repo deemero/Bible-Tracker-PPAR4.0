@@ -4,13 +4,12 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { bibleBooks } from "@/lib/bibleData";
 
-// Komponen untuk progress bar cantik
 function FancyProgressBar({ value }) {
   const getColor = (val) => {
-    if (val < 30) return "bg-gray-400";
-    if (val < 60) return "bg-yellow-400";
+    if (val < 30) return "bg-gray-300";
+    if (val < 60) return "bg-yellow-300";
     if (val < 80) return "bg-green-300";
-    return "bg-green-500";
+    return "bg-green-400";
   };
 
   return (
@@ -72,12 +71,11 @@ export default function ReadingProgressHome() {
 
   return (
     <div className="w-full max-w-5xl mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold text-center mb-2 text-black">
+      <h1 className="text-2xl font-bold text-center mb-2 text-gray-800">
         Progress Pembacaan Alkitab
       </h1>
 
-      {/* ✅ Overall Progress */}
-      <p className="text-center text-sm text-black mb-1">
+      <p className="text-center text-sm text-gray-700 mb-1">
         Progress Seluruh Alkitab: {overallProgress}%
       </p>
       <div className="mb-6">
@@ -86,7 +84,7 @@ export default function ReadingProgressHome() {
 
       {bibleBooks.map(section => (
         <div key={section.section} className="mb-8">
-          <h2 className="text-xl text-black font-semibold mb-2">{section.section}</h2>
+          <h2 className="text-xl text-gray-800 font-semibold mb-2">{section.section}</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {section.books.map(book => {
               const slug = book.name.toLowerCase().replace(/\s+/g, "-");
@@ -96,15 +94,13 @@ export default function ReadingProgressHome() {
                 <Link
                   key={book.name}
                   href={`/reading-progress/${slug}`}
-                  className="p-4 rounded-lg border hover:bg-blue-600 hover:text-white transition text-sm bg-white text-black shadow-sm"
+                  className="p-4 rounded-2xl border border-gray-200 bg-white hover:bg-green-200 hover:text-gray-900 transition text-sm text-gray-800 shadow-sm"
                 >
-                  <div className="font-semibold">{book.name}</div>
-                  <div className="text-xs text-black/60">
+                  <div className="font-semibold mb-1">{book.name}</div>
+                  <div className="text-xs text-gray-500 mb-1">
                     Progress: {progress}%
                   </div>
-                  <div className="mt-1">
-                    <FancyProgressBar value={progress} />
-                  </div>
+                  <FancyProgressBar value={progress} />
                 </Link>
               );
             })}

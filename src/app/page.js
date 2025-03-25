@@ -113,47 +113,52 @@ export default function Home() {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 py-8">
+    <div className="w-full max-w-4xl mx-auto px-4 py-8 bg-transparent">
       {/* ✅ Profile Section */}
-      <div className="bg-white rounded-xl p-6 shadow-lg mb-6 flex flex-col items-center text-center">
+      <div className="bg-white rounded-2xl p-6 shadow-md mb-6 flex flex-col items-center text-center">
         {avatarUrl ? (
-          <img src={avatarUrl} alt="Profile" className="w-24 h-24 rounded-full shadow-md object-cover mb-4" />
+          <img src={avatarUrl} alt="Profile" className="w-24 h-24 rounded-full shadow object-cover mb-4" />
         ) : (
           <div className="w-24 h-24 rounded-full bg-gray-300 mb-4" />
         )}
-        <h1 className="text-xl font-bold text-black">Selamat datang, {userName}!</h1>
+        <h1 className="text-xl font-semibold text-gray-900">Selamat datang, {userName}!</h1>
         <p className="text-sm text-gray-500">Welcome back to Bible Tracker ✨</p>
       </div>
 
-      {/* Stats Section */}
+      {/* ✅ Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <StatCard icon={<TrendingUp size={20} />} label="Overall Progress" value={`${overallProgress}%`} />
         <StatCard icon={<CalendarCheck size={20} />} label="Monthly Ticked" value={`${monthlyProgress}%`} />
         <StatCard icon={<BarChart2 size={20} />} label="Ranking" value={`#${ranking} of ${totalUsers}`} />
       </div>
 
-      {/* Recent Activity */}
-      <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 shadow-md">
-        <h2 className="text-lg font-semibold mb-4">Recent Chapters</h2>
-        <ul className="text-sm space-y-2">
-          {recentActivity.map((item, index) => (
-            <li key={index} className="flex justify-between text-gray-700 dark:text-gray-300">
-              <span>{item.book_name} {item.chapter_number}</span>
-              <span className="text-xs">{new Date(item.inserted_at).toLocaleString()}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
+      {/* ✅ Recent Activity */}
+      <div className="p-6 rounded-2xl shadow-md border border-green-100 mb-6 bg-[#b8e8d1]">
+  <h2 className="text-lg font-semibold mb-4 text-gray-100">Recent Chapters</h2>
+  <ul className="text-sm space-y-2">
+    {recentActivity.map((item, index) => (
+      <li
+        key={index}
+        className="flex justify-between border-b border-green-200 pb-2 text-gray-100"
+      >
+        <span className="font-medium">{item.book_name} {item.chapter_number}</span>
+        <span className="text-xs text-gray-200">{new Date(item.inserted_at).toLocaleString()}</span>
+      </li>
+    ))}
+  </ul>
+</div>
+
+
     </div>
   );
 }
 
 function StatCard({ icon, label, value }) {
   return (
-    <div className="bg-white dark:bg-neutral-900 p-4 rounded-xl shadow text-center">
-      <div className="flex justify-center items-center mb-2 text-blue-500">{icon}</div>
-      <p className="text-sm text-gray-500 dark:text-gray-300">{label}</p>
-      <h3 className="text-xl font-bold text-black dark:text-white">{value}</h3>
+    <div className="bg-white p-5 rounded-2xl shadow-md text-center border border-gray-200">
+      <div className="flex justify-center items-center mb-2 text-blue-500 text-xl">{icon}</div>
+      <p className="text-sm text-gray-600">{label}</p>
+      <h3 className="text-2xl font-semibold text-gray-800 mt-1">{value}</h3>
     </div>
   );
 }
