@@ -16,7 +16,8 @@ export default function Home() {
   const [recentActivity, setRecentActivity] = useState([]);
   const router = useRouter();
 
-  const totalChapters = bibleBooks.flatMap((sec) => sec.books).reduce((sum, book) => sum + book.chapters, 0);
+  const allBooks = bibleBooks.flatMap(sec => sec.books);
+  const totalChapters = allBooks.reduce((sum, book) => sum + book.chapters, 0);
 
   useEffect(() => {
     async function init() {
@@ -48,9 +49,26 @@ export default function Home() {
   };
 
   const getOverallProgress = async (uid) => {
-    const { data, error } = await supabase.from("reading_progress").select("is_read").eq("user_id", uid);
-    if (error) return console.error(error);
-    const readCount = data.filter((d) => d.is_read).length;
+    let allData = [];
+    let start = 0;
+    const limit = 1000;
+    let hasMore = true;
+
+    while (hasMore) {
+      const { data, error } = await supabase
+        .from("reading_progress")
+        .select("is_read", { count: "exact" })
+        .eq("user_id", uid)
+        .range(start, start + limit - 1);
+
+      if (error) return console.error(error);
+
+      allData = [...allData, ...data];
+      start += limit;
+      hasMore = data.length === limit;
+    }
+
+    const readCount = allData.filter(d => d.is_read).length;
     const percentage = Math.round((readCount / totalChapters) * 100);
     setOverallProgress(percentage);
   };
@@ -58,14 +76,29 @@ export default function Home() {
   const getMonthlyProgress = async (uid) => {
     const today = new Date();
     const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
-    const { data, error } = await supabase
-      .from("reading_progress")
-      .select("is_read")
-      .eq("user_id", uid)
-      .eq("is_read", true)
-      .gte("inserted_at", startOfMonth);
-    if (error) return console.error("Monthly progress error:", error);
-    const count = data.length;
+
+    let allData = [];
+    let start = 0;
+    const limit = 1000;
+    let hasMore = true;
+
+    while (hasMore) {
+      const { data, error } = await supabase
+        .from("reading_progress")
+        .select("is_read, inserted_at", { count: "exact" })
+        .eq("user_id", uid)
+        .eq("is_read", true)
+        .gte("inserted_at", startOfMonth)
+        .range(start, start + limit - 1);
+
+      if (error) return console.error("Monthly progress error:", error);
+
+      allData = [...allData, ...data];
+      start += limit;
+      hasMore = data.length === limit;
+    }
+
+    const count = allData.length;
     const monthlyPercentage = Math.round((count / totalChapters) * 100);
     setMonthlyProgress(monthlyPercentage);
   };
@@ -114,45 +147,36 @@ export default function Home() {
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4 py-8 bg-transparent">
-      {/* ✅ Profile Section */}
       <div className="bg-white rounded-2xl p-6 shadow-md mb-6 flex flex-col items-center text-center">
         {avatarUrl ? (
           <img src={avatarUrl} alt="Profile" className="w-24 h-24 rounded-full shadow object-cover mb-4" />
         ) : (
           <div className="w-24 h-24 rounded-full bg-gray-300 mb-4" />
         )}
-   <h1 className="text-2xl font-bold text-gray-800">Hello {userName}!</h1>
-<p className="text-sm text-gray-500 tracking-wide">
-  Welcome back to <span className="font-semibold text-green-600">Bible Project 4.0</span> <br />
-  <span className="text-gray-600">Revival Generation</span>
-</p>
-
+        <h1 className="text-2xl font-bold text-gray-800">Hello {userName}!</h1>
+        <p className="text-sm text-gray-500 tracking-wide">
+          Welcome back to <span className="font-semibold text-green-600">Bible Project 4.0</span> <br />
+          <span className="text-gray-600">Revival Generation</span>
+        </p>
       </div>
 
-      {/* ✅ Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <StatCard icon={<TrendingUp size={20} />} label="Overall Progress" value={`${overallProgress}%`} />
         <StatCard icon={<CalendarCheck size={20} />} label="Monthly Ticked" value={`${monthlyProgress}%`} />
         <StatCard icon={<BarChart2 size={20} />} label="Ranking" value={`#${ranking} of ${totalUsers}`} />
       </div>
 
-      {/* ✅ Recent Activity */}
       <div className="p-6 rounded-2xl shadow-md border border-green-100 mb-6 bg-[#b8e8d1]">
-  <h2 className="text-lg font-semibold mb-4 text-white text-shadow">Recent Chapters</h2>
-  <ul className="text-sm space-y-2">
-    {recentActivity.map((item, index) => (
-      <li
-        key={index}
-        className="flex justify-between border-b border-green-200 pb-2 text-white text-shadow"
-      >
-        <span className="font-medium">{item.book_name} {item.chapter_number}</span>
-        <span className="text-xs text-white text-shadow">{new Date(item.inserted_at).toLocaleString()}</span>
-      </li>
-    ))}
-  </ul>
-</div>
-
-
+        <h2 className="text-lg font-semibold mb-4 text-white text-shadow">Recent Chapters</h2>
+        <ul className="text-sm space-y-2">
+          {recentActivity.map((item, index) => (
+            <li key={index} className="flex justify-between border-b border-green-200 pb-2 text-white text-shadow">
+              <span className="font-medium">{item.book_name} {item.chapter_number}</span>
+              <span className="text-xs text-white text-shadow">{new Date(item.inserted_at).toLocaleString()}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }

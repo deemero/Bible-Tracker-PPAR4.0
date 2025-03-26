@@ -33,13 +33,12 @@ export default function BookProgressPage() {
       .from("reading_progress")
       .select("chapter_number, is_read")
       .eq("user_id", uid)
-      .eq("book_name", selectedBook.name)
-      .limit(5000);
-  
+      .eq("book_name", selectedBook.name);
+
     if (error) return console.error(error);
-  
-    const chapterMap = new Map(data.map(d => [d.chapter_number, d.is_read === true]));
-  
+
+    const chapterMap = new Map(data.map(d => [parseInt(d.chapter_number, 10), d.is_read === true]));
+
     const updatedChapters = Array.from({ length: selectedBook.chapters }, (_, i) => {
       const chapterNumber = i + 1;
       return {
@@ -47,15 +46,16 @@ export default function BookProgressPage() {
         is_read: chapterMap.has(chapterNumber) ? chapterMap.get(chapterNumber) : false
       };
     });
-  
-    setChapters(updatedChapters);
-    const readCount = updatedChapters.filter(c => c.is_read).length;
-    const calculatedProgress = (readCount / selectedBook.chapters) * 100;
-    setProgress(calculatedProgress);
-    setShowCongrats(calculatedProgress === 100);
-  };
-  
 
+    setChapters(updatedChapters);
+
+    const readCount = updatedChapters.filter(c => c.is_read).length;
+    const calculated = readCount === selectedBook.chapters
+      ? 100
+      : Math.round((readCount / selectedBook.chapters) * 100);
+    setProgress(calculated);
+    setShowCongrats(calculated === 100);
+  };
 
   const handleCheckboxChange = async (chapter, isChecked) => {
     if (!userId) return;
@@ -82,7 +82,7 @@ export default function BookProgressPage() {
   return (
     <div className="w-full max-w-3xl mx-auto px-4 py-6 relative">
       {showCongrats && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-green-100 text-green-800 px-6 py-4 rounded-xl shadow-lg text-center z-50 animate-bounce">
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-green-100 text-green-800 px-6 py-4 rounded-xl shadow-lg text-center z-50">
           🎉 Tahniah! Anda telah selesai membaca {selectedBook?.name}!
         </div>
       )}
@@ -101,6 +101,7 @@ export default function BookProgressPage() {
       <p className="text-center mb-4 text-sm font-semibold text-black">
         Progress: {Math.round(progress)}%
       </p>
+
       <div className="w-full bg-gray-300 h-3 rounded-full mb-6 overflow-hidden">
         <div
           className={`h-full ${getBarColor(progress)} transition-all duration-300`}
@@ -110,12 +111,15 @@ export default function BookProgressPage() {
 
       <div className="grid grid-cols-2 text-black sm:grid-cols-4 md:grid-cols-5 gap-3">
         {chapters.map((item) => (
-          <label key={item.chapter} className="flex items-center gap-2 text-sm">
+          <label
+            key={item.chapter}
+            className="flex items-center gap-2 text-sm font-medium"
+          >
             <input
               type="checkbox"
               checked={item.is_read}
               onChange={(e) => handleCheckboxChange(item.chapter, e.target.checked)}
-              className="accent-green-500"
+              className="accent-green-500 w-4 h-4"
             />
             Chapter {item.chapter}
           </label>

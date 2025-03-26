@@ -27,7 +27,8 @@ export default function ReadingProgressHome() {
   const [progressMap, setProgressMap] = useState({});
   const [overallProgress, setOverallProgress] = useState(0);
 
-  const totalChapters = bibleBooks.flatMap(sec => sec.books).reduce((sum, book) => sum + book.chapters, 0);
+  const allBooks = bibleBooks.flatMap(sec => sec.books);
+  const totalChapters = allBooks.reduce((sum, book) => sum + book.chapters, 0);
 
   useEffect(() => {
     const fetchUserAndProgress = async () => {
@@ -40,45 +41,70 @@ export default function ReadingProgressHome() {
     fetchUserAndProgress();
   }, []);
 
-
   const calculateProgress = async (uid) => {
-    const { data, error } = await supabase
-      .from("reading_progress")
-      .select("book_name, chapter_number, is_read")
-      .eq("user_id", uid)
-      .limit(5000);
-  
-    if (error) return console.error(error);
-  
+    console.log("📦 Start fetching reading progress...");
+
+    let allData = [];
+    let start = 0;
+    const limit = 1000;
+    let hasMore = true;
+
+    while (hasMore) {
+      const { data, error } = await supabase
+        .from("reading_progress")
+        .select("book_name, chapter_number, is_read", { count: "exact" })
+        .eq("user_id", uid)
+        .range(start, start + limit - 1);
+
+      if (error) {
+        console.error("❌ Supabase Error:", error);
+        break;
+      }
+
+      if (data.length > 0) {
+        allData = [...allData, ...data];
+        start += limit;
+        hasMore = data.length === limit;
+      } else {
+        hasMore = false;
+      }
+    }
+
     const grouped = {};
     let totalRead = 0;
-  
-    for (const row of data) {
-      if (!grouped[row.book_name]) grouped[row.book_name] = [];
+
+    for (const row of allData) {
       if (row.is_read) {
+        if (!grouped[row.book_name]) grouped[row.book_name] = [];
         grouped[row.book_name].push(row.chapter_number);
         totalRead += 1;
       }
     }
-  
+
     const newProgress = {};
-    bibleBooks.flatMap(sec => sec.books).forEach(book => {
+    allBooks.forEach(book => {
       const readCount = grouped[book.name]?.length || 0;
       newProgress[book.name] = Math.round((readCount / book.chapters) * 100);
     });
-  
+
     setProgressMap(newProgress);
     setOverallProgress(Math.round((totalRead / totalChapters) * 100));
+
+    // Debug log
+    console.log("📘 Total Chapters:", totalChapters);
+    console.log("✅ Chapters Read:", totalRead);
+    console.log("📚 Ratapan Progress:", newProgress["Ratapan"]);
+    console.log("📊 Overall Progress:", overallProgress);
   };
-  
+
   return (
     <div className="w-full max-w-5xl mx-auto px-4 py-6">
       <h1 className="text-2xl font-bold text-center mb-2 text-gray-800">
-      Bible Reading Progress
+        Bible Reading Progress
       </h1>
 
       <p className="text-center text-sm text-gray-700 mb-1">
-      Progress Whole Bible: {overallProgress}%
+        Progress Whole Bible: {overallProgress}%
       </p>
       <div className="mb-6">
         <FancyProgressBar value={overallProgress} />
