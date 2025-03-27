@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { bibleBooks } from "@/lib/bibleData";
+import { WahyuAchievementModal, SoundReminderModal } from "@/components/WahyuAchievementModal";
 
 function FancyProgressBar({ value }) {
   const getColor = (val) => {
@@ -26,6 +27,9 @@ export default function ReadingProgressHome() {
   const [userId, setUserId] = useState(null);
   const [progressMap, setProgressMap] = useState({});
   const [overallProgress, setOverallProgress] = useState(0);
+  const [showModal, setShowModal] = useState(false);
+  const [waitingForSoundConfirm, setWaitingForSoundConfirm] = useState(false);
+  const [modalType, setModalType] = useState(null); // "wahyu", "maleakhi", "yohanes"
 
   const allBooks = bibleBooks.flatMap(sec => sec.books);
   const totalChapters = allBooks.reduce((sum, book) => sum + book.chapters, 0);
@@ -42,8 +46,6 @@ export default function ReadingProgressHome() {
   }, []);
 
   const calculateProgress = async (uid) => {
-    console.log("📦 Start fetching reading progress...");
-
     let allData = [];
     let start = 0;
     const limit = 1000;
@@ -89,13 +91,44 @@ export default function ReadingProgressHome() {
 
     setProgressMap(newProgress);
     setOverallProgress(Math.round((totalRead / totalChapters) * 100));
-
-    // Debug log
-    console.log("📘 Total Chapters:", totalChapters);
-    console.log("✅ Chapters Read:", totalRead);
-    console.log("📚 Ratapan Progress:", newProgress["Ratapan"]);
-    console.log("📊 Overall Progress:", overallProgress);
   };
+
+  useEffect(() => {
+    const currentWahyuProgress = progressMap["Wahyu"];
+    const currentMaleakhiProgress = progressMap["Maleakhi"];
+    const currentYohanesProgress = progressMap["Yohanes"];
+
+    if (currentWahyuProgress === 100 && !localStorage.getItem("rev_achievement_done")) {
+      setModalType("wahyu");
+      setWaitingForSoundConfirm(true);
+    }
+
+    if (
+      currentMaleakhiProgress === 100 &&
+      currentWahyuProgress < 100 &&
+      !localStorage.getItem("maleakhi_half_done")
+    ) {
+      setModalType("maleakhi");
+      setWaitingForSoundConfirm(true);
+    }
+
+    if (currentYohanesProgress === 100 && !localStorage.getItem("yohanes_love_done")) {
+      setModalType("yohanes");
+      setWaitingForSoundConfirm(true);
+    }
+
+    if (currentWahyuProgress < 100 && localStorage.getItem("rev_achievement_done")) {
+      localStorage.removeItem("rev_achievement_done");
+    }
+
+    if (currentMaleakhiProgress < 100 && localStorage.getItem("maleakhi_half_done")) {
+      localStorage.removeItem("maleakhi_half_done");
+    }
+
+    if (currentYohanesProgress < 100 && localStorage.getItem("yohanes_love_done")) {
+      localStorage.removeItem("yohanes_love_done");
+    }
+  }, [progressMap["Wahyu"], progressMap["Maleakhi"], progressMap["Yohanes"]]);
 
   return (
     <div className="w-full max-w-5xl mx-auto px-4 py-6">
@@ -135,6 +168,36 @@ export default function ReadingProgressHome() {
           </div>
         </div>
       ))}
+
+      <SoundReminderModal
+        show={waitingForSoundConfirm}
+        onConfirm={() => {
+          let audio;
+          if (modalType === "wahyu") {
+            audio = new Audio("/sounds/finalc.mp3");
+            localStorage.setItem("rev_achievement_done", "true");
+          } else if (modalType === "maleakhi") {
+            audio = new Audio("/sounds/finalc.mp3");
+            localStorage.setItem("maleakhi_half_done", "true");
+          } else if (modalType === "yohanes") {
+            audio = new Audio("/sounds/luv.mp3");
+            localStorage.setItem("yohanes_love_done", "true");
+          }
+
+          setTimeout(() => {
+            audio?.play().catch(() => {});
+          }, 300);
+
+          setWaitingForSoundConfirm(false);
+          setShowModal(true);
+        }}
+      />
+
+      <WahyuAchievementModal
+        show={showModal}
+        onClose={() => setShowModal(false)}
+        type={modalType}
+      />
     </div>
   );
 }
