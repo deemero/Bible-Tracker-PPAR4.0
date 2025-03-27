@@ -62,6 +62,11 @@ export default function SignIn() {
             />
           </div>
 
+          <p className="text-center text-sm text-blue-500 mt-2 hover:underline">
+  <a href="/auth/forgot-password">Forgot your password?</a>
+</p>
+
+
           <button
             type="submit"
             disabled={loading}
