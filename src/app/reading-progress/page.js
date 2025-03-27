@@ -177,7 +177,7 @@ export default function ReadingProgressHome() {
             audio = new Audio("/sounds/finalc.mp3");
             localStorage.setItem("rev_achievement_done", "true");
           } else if (modalType === "maleakhi") {
-            audio = new Audio("/sounds/finalc.mp3");
+            audio = new Audio("/sounds/jesus.mp3");
             localStorage.setItem("maleakhi_half_done", "true");
           } else if (modalType === "yohanes") {
             audio = new Audio("/sounds/luv.mp3");
