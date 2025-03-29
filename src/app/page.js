@@ -19,16 +19,7 @@ export default function Home() {
   const allBooks = bibleBooks.flatMap(sec => sec.books);
   const totalChapters = allBooks.reduce((sum, book) => sum + book.chapters, 0);
 
-  <button
-  onClick={() => {
-    if (window?.OneSignal) {
-      window.OneSignal.showSlidedownPrompt();
-    }
-  }}
-  className="p-2 bg-green-600 text-white rounded"
->
-  Aktifkan Notifikasi 📣
-</button>
+
 
 
   useEffect(() => {
@@ -190,8 +181,20 @@ export default function Home() {
         </ul>
       </div>
     </div>
+
+    
   );
 }
+<button
+onClick={() => {
+  if (window?.OneSignal) {
+    window.OneSignal.showSlidedownPrompt();
+  }
+}}
+className="p-2 bg-green-600 text-white rounded"
+>
+Aktifkan Notifikasi 📣
+</button>
 
 function StatCard({ icon, label, value }) {
   return (
@@ -200,5 +203,6 @@ function StatCard({ icon, label, value }) {
       <p className="text-sm text-gray-600">{label}</p>
       <h3 className="text-2xl font-semibold text-gray-800 mt-1">{value}</h3>
     </div>
+    
   );
 }
