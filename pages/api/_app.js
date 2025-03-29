@@ -1,5 +1,7 @@
 import { useEffect } from 'react'
-import { useUser } from '@supabase/auth-helpers-react' // or your own Supabase auth hook
+
+import { useUser } from '@supabase/auth-helpers-react'
+
 
 export default function MyApp({ Component, pageProps }) {
   const user = useUser();
