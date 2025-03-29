@@ -19,6 +19,18 @@ export default function Home() {
   const allBooks = bibleBooks.flatMap(sec => sec.books);
   const totalChapters = allBooks.reduce((sum, book) => sum + book.chapters, 0);
 
+  <button
+  onClick={() => {
+    if (window?.OneSignal) {
+      window.OneSignal.showSlidedownPrompt();
+    }
+  }}
+  className="p-2 bg-green-600 text-white rounded"
+>
+  Aktifkan Notifikasi 📣
+</button>
+
+
   useEffect(() => {
     async function init() {
       const { data: { user } } = await supabase.auth.getUser();
