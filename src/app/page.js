@@ -19,9 +19,6 @@ export default function Home() {
   const allBooks = bibleBooks.flatMap(sec => sec.books);
   const totalChapters = allBooks.reduce((sum, book) => sum + book.chapters, 0);
 
-
-
-
   useEffect(() => {
     async function init() {
       const { data: { user } } = await supabase.auth.getUser();
@@ -34,6 +31,13 @@ export default function Home() {
         getMonthlyProgress(user.id);
         getRanking(user.id);
         getRecentReads(user.id);
+
+        // OneSignal external ID (link to Supabase user)
+        if (window?.OneSignal) {
+          window.OneSignal.push(() => {
+            window.OneSignal.setExternalUserId(user.id);
+          });
+        }
       }
     }
     init();
@@ -180,21 +184,23 @@ export default function Home() {
           ))}
         </ul>
       </div>
-    </div>
 
-    
+      {/* ✅ OneSignal Noti Button */}
+      <div className="flex justify-center mt-6">
+        <button
+          onClick={() => {
+            if (window?.OneSignal) {
+              window.OneSignal.showSlidedownPrompt();
+            }
+          }}
+          className="p-2 bg-green-600 text-white rounded shadow hover:bg-green-700"
+        >
+          Aktifkan Notifikasi 📣
+        </button>
+      </div>
+    </div>
   );
 }
-<button
-onClick={() => {
-  if (window?.OneSignal) {
-    window.OneSignal.showSlidedownPrompt();
-  }
-}}
-className="p-2 bg-green-600 text-white rounded"
->
-Aktifkan Notifikasi 📣
-</button>
 
 function StatCard({ icon, label, value }) {
   return (
@@ -203,6 +209,5 @@ function StatCard({ icon, label, value }) {
       <p className="text-sm text-gray-600">{label}</p>
       <h3 className="text-2xl font-semibold text-gray-800 mt-1">{value}</h3>
     </div>
-    
   );
 }
