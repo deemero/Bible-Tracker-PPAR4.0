@@ -29,7 +29,8 @@ export default function ReadingProgressHome() {
   const [overallProgress, setOverallProgress] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const [waitingForSoundConfirm, setWaitingForSoundConfirm] = useState(false);
-  const [modalType, setModalType] = useState(null); // "wahyu", "maleakhi", "yohanes"
+  const [modalType, setModalType] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const allBooks = bibleBooks.flatMap(sec => sec.books);
   const totalChapters = allBooks.reduce((sum, book) => sum + book.chapters, 0);
@@ -143,28 +144,41 @@ export default function ReadingProgressHome() {
         <FancyProgressBar value={overallProgress} />
       </div>
 
+      {/* Search Bar */}
+      <div className="flex justify-center mb-8">
+        <input
+          type="text"
+          placeholder="Cari nama buku..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full sm:w-80 px-5 py-3 rounded-xl border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-green-300 bg-white text-black placeholder-gray-500"
+        />
+      </div>
+
       {bibleBooks.map(section => (
         <div key={section.section} className="mb-8">
           <h2 className="text-xl text-gray-800 font-semibold mb-2">{section.section}</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {section.books.map(book => {
-              const slug = book.name.toLowerCase().replace(/\s+/g, "-");
-              const progress = progressMap[book.name] || 0;
+            {section.books
+              .filter(book => book.name.toLowerCase().includes(searchTerm.toLowerCase()))
+              .map(book => {
+                const slug = book.name.toLowerCase().replace(/\s+/g, "-");
+                const progress = progressMap[book.name] || 0;
 
-              return (
-                <Link
-                  key={book.name}
-                  href={`/reading-progress/${slug}`}
-                  className="p-4 rounded-2xl border border-gray-200 bg-white hover:bg-green-200 hover:text-gray-900 transition text-sm text-gray-800 shadow-sm"
-                >
-                  <div className="font-semibold mb-1">{book.name}</div>
-                  <div className="text-xs text-gray-500 mb-1">
-                    Progress: {progress}%
-                  </div>
-                  <FancyProgressBar value={progress} />
-                </Link>
-              );
-            })}
+                return (
+                  <Link
+                    key={book.name}
+                    href={`/reading-progress/${slug}`}
+                    className="p-4 rounded-2xl border border-gray-200 bg-white hover:bg-green-200 hover:text-gray-900 transition text-sm text-gray-800 shadow-sm"
+                  >
+                    <div className="font-semibold mb-1">{book.name}</div>
+                    <div className="text-xs text-gray-500 mb-1">
+                      Progress: {progress}%
+                    </div>
+                    <FancyProgressBar value={progress} />
+                  </Link>
+                );
+              })}
           </div>
         </div>
       ))}
