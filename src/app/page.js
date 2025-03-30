@@ -3,7 +3,10 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { bibleBooks } from "@/lib/bibleData";
-import { TrendingUp, CalendarCheck, BarChart2 } from "lucide-react";
+import { updateStreak } from "@/lib/streakUtils";
+import { TrendingUp, CalendarCheck, BarChart2, Flame } from "lucide-react";
+import Confetti from "react-confetti";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function Home() {
   const [userName, setUserName] = useState("");
@@ -14,13 +17,13 @@ export default function Home() {
   const [ranking, setRanking] = useState(null);
   const [totalUsers, setTotalUsers] = useState(0);
   const [recentActivity, setRecentActivity] = useState([]);
+  const [readingStreak, setReadingStreak] = useState(0);
+  const [prevStreak, setPrevStreak] = useState(null);
+  const [showConfetti, setShowConfetti] = useState(false);
   const router = useRouter();
 
   const allBooks = bibleBooks.flatMap(sec => sec.books);
   const totalChapters = allBooks.reduce((sum, book) => sum + book.chapters, 0);
-
-
-
 
   useEffect(() => {
     async function init() {
@@ -34,6 +37,8 @@ export default function Home() {
         getMonthlyProgress(user.id);
         getRanking(user.id);
         getRecentReads(user.id);
+        await updateStreak(user.id);        // 🔥 Update streak
+        await getReadingStreak(user.id);    // 🔥 Fetch streak + animation
       }
     }
     init();
@@ -48,6 +53,28 @@ export default function Home() {
     if (!error) {
       setUserName(data.username);
       setAvatarUrl(data.avatar_url);
+    }
+  };
+
+  const getReadingStreak = async (uid) => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("reading_streak")
+      .eq("id", uid)
+      .single();
+
+    if (!error && data) {
+      const newStreak = data.reading_streak || 0;
+
+      // Hanya animate kalau streak > 0 & streak bertambah
+      if (prevStreak !== null && newStreak > prevStreak && newStreak > 0) {
+        setShowConfetti(true);
+        toast.success(`🔥 Streak Up! Now ${newStreak} Days`);
+        setTimeout(() => setShowConfetti(false), 4000);
+      }
+
+      setReadingStreak(newStreak);
+      setPrevStreak(newStreak);
     }
   };
 
@@ -150,6 +177,9 @@ export default function Home() {
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4 py-8 bg-transparent">
+      {showConfetti && <Confetti numberOfPieces={150} recycle={false} />}
+      <Toaster position="top-center" />
+
       <div className="bg-white rounded-2xl p-6 shadow-md mb-6 flex flex-col items-center text-center">
         {avatarUrl ? (
           <img src={avatarUrl} alt="Profile" className="w-24 h-24 rounded-full shadow object-cover mb-4" />
@@ -163,12 +193,20 @@ export default function Home() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+      {/* 📊 Statistik */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard icon={<TrendingUp size={20} />} label="Overall Progress" value={`${overallProgress}%`} />
         <StatCard icon={<CalendarCheck size={20} />} label="Monthly Ticked" value={`${monthlyProgress}%`} />
         <StatCard icon={<BarChart2 size={20} />} label="Ranking" value={`#${ranking} of ${totalUsers}`} />
+        <StatCard
+          icon={<Flame size={20} />}
+          label="Reading Streak"
+          value={`${readingStreak} days`}
+          glow={readingStreak > 0}
+        />
       </div>
 
+      {/* 📖 Bacaan Terbaru */}
       <div className="p-6 rounded-2xl shadow-md border border-green-100 mb-6 bg-[#b8e8d1]">
         <h2 className="text-lg font-semibold mb-4 text-white text-shadow">Recent Chapters</h2>
         <ul className="text-sm space-y-2">
@@ -181,18 +219,18 @@ export default function Home() {
         </ul>
       </div>
     </div>
-
-    
   );
 }
 
-function StatCard({ icon, label, value }) {
+function StatCard({ icon, label, value, glow }) {
   return (
-    <div className="bg-white p-5 rounded-2xl shadow-md text-center border border-gray-200">
-      <div className="flex justify-center items-center mb-2 text-blue-500 text-xl">{icon}</div>
+    <div
+      className={`bg-white p-5 rounded-2xl shadow-md text-center border border-gray-200 transition-all duration-300
+      ${glow ? "ring-2 ring-orange-400 animate-pulse" : ""}`}
+    >
+      <div className="flex justify-center items-center mb-2 text-orange-500 text-xl">{icon}</div>
       <p className="text-sm text-gray-600">{label}</p>
       <h3 className="text-2xl font-semibold text-gray-800 mt-1">{value}</h3>
     </div>
-    
   );
 }

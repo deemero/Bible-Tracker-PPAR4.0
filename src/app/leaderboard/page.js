@@ -8,11 +8,13 @@ export default function LeaderboardPage() {
   const [overallLeaders, setOverallLeaders] = useState([]);
   const [monthlyLeaders, setMonthlyLeaders] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
+  const [streakLeaders, setStreakLeaders] = useState([]);
 
   useEffect(() => {
     fetchOverall();
     fetchMonthly();
     fetchAllUsers();
+    fetchStreakLeaders(); // 🔥
   }, []);
 
   const fetchOverall = async () => {
@@ -30,6 +32,16 @@ export default function LeaderboardPage() {
     if (!error) setAllUsers(data);
   };
 
+  const fetchStreakLeaders = async () => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("username, avatar_url, reading_streak")
+      .order("reading_streak", { ascending: false })
+      .limit(5);
+
+    if (!error && data) setStreakLeaders(data);
+  };
+
   const renderList = (list) => {
     const topThree = list.slice(0, 3);
     const others = list.slice(3);
@@ -42,7 +54,6 @@ export default function LeaderboardPage() {
               <div
                 key={index}
                 className="flex flex-col items-center bg-white rounded-xl p-4 shadow-md border"
-
               >
                 {user.avatar_url ? (
                   <Image
@@ -66,7 +77,7 @@ export default function LeaderboardPage() {
 
         <div className="space-y-2">
           {others.map((user, index) => (
-          <div key={index + 3} className="flex items-center gap-4 p-3 rounded-lg bg-white shadow"> 
+            <div key={index + 3} className="flex items-center gap-4 p-3 rounded-lg bg-white shadow">
               <div className="text-lg font-bold w-6 text-gray-600">{index + 4}</div>
               <div className="flex-shrink-0">
                 {user.avatar_url ? (
@@ -107,16 +118,44 @@ export default function LeaderboardPage() {
     );
   };
 
+  const renderStreakList = () => (
+    <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+      {streakLeaders.map((user, index) => (
+        <div
+          key={index}
+          className="flex flex-col items-center bg-white rounded-xl p-4 shadow-md border hover:scale-105 transition duration-300"
+        >
+          <div className="text-2xl mb-1">
+            {index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`}
+          </div>
+          {user.avatar_url ? (
+            <Image
+              src={user.avatar_url}
+              alt="Avatar"
+              width={64}
+              height={64}
+              className="rounded-full object-cover w-16 h-16 mb-2"
+            />
+          ) : (
+            <div className="w-16 h-16 rounded-full bg-gray-300 mb-2" />
+          )}
+          <div className="font-semibold text-gray-800">{user.username}</div>
+          <div className="text-sm text-orange-600 font-bold">{user.reading_streak} day streak</div>
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-6">
-     <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">Leaderboard</h1>
-
+      <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">Leaderboard</h1>
 
       <div className="flex justify-center flex-wrap gap-3 mb-6">
         {[
           { key: "overall", label: "Top 10 Keseluruhan" },
           { key: "monthly", label: "Top 5 Bulan Ini" },
           { key: "all", label: "Semua Peserta" },
+          { key: "streak", label: "Top 5 Streak 🔥" }, // 🔥 Tab baru
         ].map(({ key, label }) => (
           <button
             key={key}
@@ -135,6 +174,7 @@ export default function LeaderboardPage() {
       {tab === "overall" && renderList(overallLeaders)}
       {tab === "monthly" && renderList(monthlyLeaders)}
       {tab === "all" && renderList(allUsers)}
+      {tab === "streak" && renderStreakList()} {/* 🔥 */}
     </div>
   );
 }
