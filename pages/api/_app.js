@@ -34,11 +34,3 @@ export default function MyApp({ Component, pageProps }) {
 }
 
 
-export default function AppLayout({ children }) {
-  return (
-    <>
-      {children}
-      <ToastContainer position="top-center" />
-    </>
-  );
-}
