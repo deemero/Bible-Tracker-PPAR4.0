@@ -67,10 +67,16 @@ export default function LeaderboardPage() {
                 ) : (
                   <div className="w-16 h-16 rounded-full bg-gray-300 mb-2" />
                 )}
-                <div className="text-sm font-semibold text-gray-600 mb-1">#{index + 1}</div>
+                <div className="text-sm font-semibold text-gray-600 mb-1">
+                  #{index + 1}
+                </div>
                 <div className="font-bold text-lg">{user.username}</div>
-                <div className="text-xs text-gray-500 mb-1">{user.chapters_read} Bab</div>
-                <div className="text-sm font-semibold text-blue-500">{user.progress_percentage}%</div>
+                <div className="text-xs text-gray-500 mb-1">
+                  {user.chapters_read} Bab
+                </div>
+                <div className="text-sm font-semibold text-blue-500">
+                  {user.progress_percentage}%
+                </div>
               </div>
             ))}
           </div>
@@ -78,8 +84,13 @@ export default function LeaderboardPage() {
 
         <div className="space-y-2">
           {others.map((user, index) => (
-            <div key={index + 3} className="flex items-center gap-4 p-3 rounded-lg bg-white text-black shadow">
-              <div className="text-lg font-bold w-6 text-gray-600">{index + 4}</div>
+            <div
+              key={index + 3}
+              className="flex items-center gap-4 p-3 rounded-lg bg-white text-black shadow"
+            >
+              <div className="text-lg font-bold w-6 text-gray-600">
+                {index + 4}
+              </div>
               <div className="flex-shrink-0">
                 {user.avatar_url ? (
                   <Image
@@ -95,7 +106,9 @@ export default function LeaderboardPage() {
               </div>
               <div className="flex-1">
                 <div className="font-medium">{user.username}</div>
-                <div className="text-xs text-gray-500 mb-1">{user.chapters_read} Bab dibaca</div>
+                <div className="text-xs text-gray-500 mb-1">
+                  {user.chapters_read} Bab dibaca
+                </div>
                 <div className="w-full bg-gray-200 h-2 rounded-full">
                   <div
                     className={`h-full rounded-full transition-all duration-300 ${
@@ -111,7 +124,9 @@ export default function LeaderboardPage() {
                   />
                 </div>
               </div>
-              <div className="text-sm font-bold">{user.progress_percentage}%</div>
+              <div className="text-sm font-bold">
+                {user.progress_percentage}%
+              </div>
             </div>
           ))}
         </div>
@@ -141,7 +156,9 @@ export default function LeaderboardPage() {
             <div className="w-16 h-16 rounded-full bg-gray-300 mb-2" />
           )}
           <div className="font-semibold">{user.username}</div>
-          <div className="text-sm text-orange-600 font-bold">{user.reading_streak} day streak</div>
+          <div className="text-sm text-orange-600 font-bold">
+            {user.reading_streak} day streak
+          </div>
         </div>
       ))}
     </div>
@@ -149,13 +166,14 @@ export default function LeaderboardPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6">
-      <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">Leaderboard</h1>
+      <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">
+        Leaderboard
+      </h1>
 
       <div className="flex justify-center flex-wrap gap-3 mb-4">
         {[
           { key: "overall", label: "Top 10 Keseluruhan" },
           { key: "monthly", label: "Top 5 Bulan Ini" },
-          { key: "all", label: "Semua Peserta" },
           { key: "streak", label: "Streak Harian 🔥" },
         ].map(({ key, label }) => (
           <button
@@ -182,18 +200,25 @@ export default function LeaderboardPage() {
         />
       </div>
 
-      {tab === "overall" && renderList(overallLeaders.filter(user =>
-        user.username.toLowerCase().includes(searchTerm.toLowerCase())
-      ))}
-      {tab === "monthly" && renderList(monthlyLeaders.filter(user =>
-        user.username.toLowerCase().includes(searchTerm.toLowerCase())
-      ))}
-      {tab === "all" && renderList(allUsers.filter(user =>
-        user.username.toLowerCase().includes(searchTerm.toLowerCase())
-      ))}
-      {tab === "streak" && renderStreakList(streakLeaders.filter(user =>
-        user.username.toLowerCase().includes(searchTerm.toLowerCase())
-      ))}
+      {tab === "overall" &&
+        renderList(
+          overallLeaders.filter((user) =>
+            (user.username || "").toLowerCase().includes(searchTerm.toLowerCase())
+          )
+        )}
+      {tab === "monthly" &&
+        renderList(
+          monthlyLeaders.filter((user) =>
+            (user.username || "").toLowerCase().includes(searchTerm.toLowerCase())
+          )
+        )}
+    
+      {tab === "streak" &&
+        renderStreakList(
+          streakLeaders.filter((user) =>
+            (user.username || "").toLowerCase().includes(searchTerm.toLowerCase())
+          )
+        )}
     </div>
   );
 }

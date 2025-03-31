@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Home, BookOpen, BarChartBig, Settings, Menu, LogOut, Search, Archive } from "lucide-react";
+import { Home, BookOpen, BarChartBig, Settings, Menu, LogOut, Search, Info, Users } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
 export default function Sidebar() {
@@ -16,12 +16,15 @@ export default function Sidebar() {
     { icon: <BookOpen size={20} />, text: "Reading Progress", href: "/reading-progress", color: "green" },
     { icon: <BarChartBig size={20} />, text: "Leaderboard", href: "/leaderboard", color: "green" },
     { icon: <Settings size={20} />, text: "Settings", href: "/settings", color: "green" },
-    { icon: <Archive size={20} />, text: "Others", href: "/others", color: "green" },
+    { icon: <Info size={20} />, text: "Others", href: "/others", color: "green" },
+    { icon: <Users size={20} />, text: "All Participant", href: "/playerlist", color: "green" },
   ];
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       setUser(user);
     };
     getUser();
