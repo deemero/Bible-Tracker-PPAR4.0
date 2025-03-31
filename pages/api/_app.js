@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 
 import { useUser } from '@supabase/auth-helpers-react'
-import { ToastContainer } from "react-toastify";
+
 import "react-toastify/dist/ReactToastify.css";
 
 
