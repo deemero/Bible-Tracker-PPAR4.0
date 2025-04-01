@@ -1,0 +1,22 @@
+{
+    "name": "Bible Project 4.0",
+    "short_name": "BibleTracker",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#0f172a",
+    "description": "Revival Generation Bible Reading Tracker",
+    "icons": [
+      {
+        "src": "/public/bpr.png",
+        "sizes": "192x192",
+        "type": "image/png"
+      },
+      {
+        "src": "/public/bpr.png",
+        "sizes": "512x512",
+        "type": "image/png"
+      }
+    ]
+  }
+  
