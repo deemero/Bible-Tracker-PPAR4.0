@@ -1,13 +1,12 @@
 "use client";
 import { usePathname } from "next/navigation";
-import { useEffect } from "react"; // ✅ Penting!
+import { useEffect } from "react";
 import ClientLayout from "./ClientLayout";
 
 export default function ClientWrapper({ children }) {
   const pathname = usePathname();
   const isAuthPage = pathname.startsWith("/auth");
 
-  // ✅ Register service worker
   useEffect(() => {
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/service-worker.js").then(() => {
