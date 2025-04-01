@@ -17,7 +17,6 @@ export default function PlayerListPage() {
     const { data, error } = await supabase.rpc("get_all_players_with_email");
     if (!error) {
       console.log("✅ Players data:", data);
-      // Urutkan pemain mengikut peratusan progress (tertinggi ke terendah)
       const sortedPlayers = data.sort((a, b) => b.progress_percentage - a.progress_percentage);
       setPlayers(sortedPlayers);
     } else {
@@ -35,7 +34,7 @@ export default function PlayerListPage() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-6">
       <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">
-      Revival Project Participant
+        Revival Project Participant
       </h1>
 
       {/* Butang Carian */}
@@ -103,14 +102,12 @@ export default function PlayerListPage() {
               <div className="ml-2">
                 {user.email ? (
                   <a
-                    href={`https://mail.google.com/mail/?view=cm&to=${user.email}&su=Jom Baca Alkitab 📖&body=Hey ${encodeURIComponent(
+                    href={`mailto:${user.email}?subject=Jom Baca Alkitab 📖&body=Hey ${encodeURIComponent(
                       user.username
                     )}, jom baca Firman hari ini! 🔥`}
-                    target="_blank"
-                    rel="noopener noreferrer"
                     className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 hover:bg-green-200 transition"
                   >
-                    Poke 
+                    Poke
                   </a>
                 ) : (
                   <span className="text-xs text-gray-400 italic">Tiada email</span>
