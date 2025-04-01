@@ -1,6 +1,6 @@
-// src/app/layout.js
 import "../globals.css";
 import ClientLayout from "@/components/ClientLayout";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const metadata = {
   title: "Bible Tracker",
@@ -22,6 +22,7 @@ export default function RootLayout({ children }) {
       </head>
       <body className="bg-background text-foreground">
         <ClientLayout>{children}</ClientLayout>
+        <SpeedInsights />
       </body>
     </html>
   );
