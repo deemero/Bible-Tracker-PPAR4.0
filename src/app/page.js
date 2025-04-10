@@ -1,237 +1,97 @@
 "use client";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient";
-import { bibleBooks } from "@/lib/bibleData";
-import { updateStreak } from "@/lib/streakUtils";
-import { TrendingUp, CalendarCheck, BarChart2, Flame } from "lucide-react";
-import Confetti from "react-confetti";
-import toast, { Toaster } from "react-hot-toast";
 
-export default function Home() {
-  const [userName, setUserName] = useState("");
-  const [userId, setUserId] = useState(null);
-  const [avatarUrl, setAvatarUrl] = useState(null);
-  const [overallProgress, setOverallProgress] = useState(0);
-  const [monthlyProgress, setMonthlyProgress] = useState(0);
-  const [ranking, setRanking] = useState(null);
-  const [totalUsers, setTotalUsers] = useState(0);
-  const [recentActivity, setRecentActivity] = useState([]);
-  const [readingStreak, setReadingStreak] = useState(0);
-  const [prevStreak, setPrevStreak] = useState(null);
-  const [showConfetti, setShowConfetti] = useState(false);
-  const router = useRouter();
+import { useState } from "react";
 
-  const allBooks = bibleBooks.flatMap(sec => sec.books);
-  const totalChapters = allBooks.reduce((sum, book) => sum + book.chapters, 0);
+const slides = [
+  {
+    title: "Your Bible Reading",
+    description: "Track every chapter you read and grow spiritually every day.",
+    image: "/bible.png",
+  },
+  {
+    title: "Join the Leaderboard",
+    description: "See where you stand among other readers and stay motivated.",
+    image: "/lea.png",
+  },
+  {
+    title: "Mark Your Progress",
+    description: "Tick off chapters and visualize your spiritual journey clearly.",
+    image: "/mark.png",
+  },
+];
 
-  useEffect(() => {
-    async function init() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push("/auth/signin");
-      } else {
-        setUserId(user.id);
-        getUser(user.id);
-        getOverallProgress(user.id);
-        getMonthlyProgress(user.id);
-        getRanking(user.id);
-        getRecentReads(user.id);
-        await updateStreak(user.id);        // 🔥 Update streak
-        await getReadingStreak(user.id);    // 🔥 Fetch streak + animation
-      }
-    }
-    init();
-  }, []);
-
-  const getUser = async (uid) => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("username, avatar_url")
-      .eq("id", uid)
-      .single();
-    if (!error) {
-      setUserName(data.username);
-      setAvatarUrl(data.avatar_url);
-    }
-  };
-
-  const getReadingStreak = async (uid) => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("reading_streak")
-      .eq("id", uid)
-      .single();
-
-    if (!error && data) {
-      const newStreak = data.reading_streak || 0;
-
-      // Hanya animate kalau streak > 0 & streak bertambah
-      if (prevStreak !== null && newStreak > prevStreak && newStreak > 0) {
-        setShowConfetti(true);
-        toast.success(`🔥 Streak Up! Now ${newStreak} Days`);
-        setTimeout(() => setShowConfetti(false), 4000);
-      }
-
-      setReadingStreak(newStreak);
-      setPrevStreak(newStreak);
-    }
-  };
-
-  const getOverallProgress = async (uid) => {
-    let allData = [];
-    let start = 0;
-    const limit = 1000;
-    let hasMore = true;
-
-    while (hasMore) {
-      const { data, error } = await supabase
-        .from("reading_progress")
-        .select("is_read", { count: "exact" })
-        .eq("user_id", uid)
-        .range(start, start + limit - 1);
-
-      if (error) return console.error(error);
-
-      allData = [...allData, ...data];
-      start += limit;
-      hasMore = data.length === limit;
-    }
-
-    const readCount = allData.filter(d => d.is_read).length;
-    const percentage = Math.round((readCount / totalChapters) * 100);
-    setOverallProgress(percentage);
-  };
-
-  const getMonthlyProgress = async (uid) => {
-    const today = new Date();
-    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
-
-    let allData = [];
-    let start = 0;
-    const limit = 1000;
-    let hasMore = true;
-
-    while (hasMore) {
-      const { data, error } = await supabase
-        .from("reading_progress")
-        .select("is_read, inserted_at", { count: "exact" })
-        .eq("user_id", uid)
-        .eq("is_read", true)
-        .gte("inserted_at", startOfMonth)
-        .range(start, start + limit - 1);
-
-      if (error) return console.error("Monthly progress error:", error);
-
-      allData = [...allData, ...data];
-      start += limit;
-      hasMore = data.length === limit;
-    }
-
-    const count = allData.length;
-    const monthlyPercentage = Math.round((count / totalChapters) * 100);
-    setMonthlyProgress(monthlyPercentage);
-  };
-
-  const getRanking = async (uid) => {
-    const { data: progressData, error } = await supabase
-      .from("reading_progress")
-      .select("user_id, is_read")
-      .eq("is_read", true);
-    if (error) return console.error("Error fetching progress data:", error);
-
-    const userProgressMap = {};
-    for (const row of progressData) {
-      if (!userProgressMap[row.user_id]) userProgressMap[row.user_id] = 0;
-      userProgressMap[row.user_id]++;
-    }
-
-    const sorted = Object.entries(userProgressMap)
-      .map(([user_id, chapters_read]) => ({
-        user_id,
-        chapters_read,
-        progress_percentage: Math.round((chapters_read / totalChapters) * 100),
-      }))
-      .sort((a, b) => b.progress_percentage - a.progress_percentage);
-
-    const index = sorted.findIndex((user) => user.user_id === uid);
-    if (index !== -1) {
-      setRanking(index + 1);
-      setTotalUsers(sorted.length);
-    } else {
-      setRanking(sorted.length + 1);
-      setTotalUsers(sorted.length + 1);
-    }
-  };
-
-  const getRecentReads = async (uid) => {
-    const { data, error } = await supabase
-      .from("reading_progress")
-      .select("book_name, chapter_number, inserted_at")
-      .eq("user_id", uid)
-      .eq("is_read", true)
-      .order("inserted_at", { ascending: false })
-      .limit(5);
-    if (!error) setRecentActivity(data);
-  };
+export default function IntroPage() {
+  const [activeIndex, setActiveIndex] = useState(0);
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 py-8 bg-transparent">
-      {showConfetti && <Confetti numberOfPieces={150} recycle={false} />}
-      <Toaster position="top-center" />
+    <div className="h-screen w-screen bg-emerald-100 flex flex-col justify-between overflow-hidden">
+      
+      {/* Slides container */}
+      <div
+        className="flex flex-1 transition-transform duration-500 flex-nowrap"
+        style={{
+          transform: `translateX(-${activeIndex * 100}vw)`,
+          width: `${slides.length * 100}vw`,
+        }}
+      >
+        {slides.map((slide, index) => (
+          <div
+            key={index}
+            className="min-w-screen h-full flex flex-col justify-center items-center text-center px-6 py-10"
+          >
+            <img src={slide.image} alt={slide.title} className="w-64 h-64 object-contain mb-6" />
+            <h2 className="text-3xl font-bold text-green-800 mb-2">{slide.title}</h2>
+            <p className="text-gray-700 max-w-sm">{slide.description}</p>
+          </div>
+        ))}
+      </div>
 
-      <div className="bg-white rounded-2xl p-6 shadow-md mb-6 flex flex-col items-center text-center">
-        {avatarUrl ? (
-          <img src={avatarUrl} alt="Profile" className="w-24 h-24 rounded-full shadow object-cover mb-4" />
+      {/* Page Indicator */}
+      <div className="flex justify-center items-center gap-2 py-3">
+        {slides.map((_, i) => (
+          <span
+            key={i}
+            className={`h-1.5 w-6 rounded-full transition-all duration-300 ${
+              i === activeIndex ? "bg-green-800" : "bg-white/70"
+            }`}
+          />
+        ))}
+      </div>
+
+      {/* Navigation Buttons */}
+      <div className="flex justify-between items-center px-6 pb-6">
+        <button
+          onClick={() => setActiveIndex(Math.max(0, activeIndex - 1))}
+          className="text-green-800 font-semibold disabled:opacity-40"
+          disabled={activeIndex === 0}
+        >
+          Back
+        </button>
+
+        {activeIndex < slides.length - 1 ? (
+          <button
+            onClick={() => setActiveIndex(Math.min(slides.length - 1, activeIndex + 1))}
+            className="text-green-800 font-semibold"
+          >
+            Next
+          </button>
         ) : (
-          <div className="w-24 h-24 rounded-full bg-gray-300 mb-4" />
+          <div className="flex gap-3 w-full justify-center">
+            <a
+              href="/auth/signin"
+              className="px-6 py-3 bg-white text-green-700 rounded-full font-semibold shadow hover:bg-green-50 transition"
+            >
+              Log in
+            </a>
+            <a
+              href="/auth/signup"
+              className="px-6 py-3 bg-green-700 text-white rounded-full font-semibold shadow hover:bg-green-800 transition"
+            >
+              Sign up
+            </a>
+          </div>
         )}
-        <h1 className="text-2xl font-bold text-gray-800">Hello {userName}!</h1>
-        <p className="text-sm text-gray-500 tracking-wide">
-          Welcome back to <span className="font-semibold text-green-600">Bible Project 4.0</span> <br />
-          <span className="text-gray-600">Revival Generation</span>
-        </p>
-      </div>
-
-      {/* 📊 Statistik */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard icon={<TrendingUp size={20} />} label="Overall Progress" value={`${overallProgress}%`} />
-        <StatCard icon={<CalendarCheck size={20} />} label="Monthly Ticked" value={`${monthlyProgress}%`} />
-        <StatCard icon={<BarChart2 size={20} />} label="Ranking" value={`#${ranking} of ${totalUsers}`} />
-        <StatCard
-          icon={<Flame size={20} />}
-          label="Reading Streak"
-          value={`${readingStreak} days`}
-          glow={readingStreak > 0}
-        />
-      </div>
-
-      {/* 📖 Bacaan Terbaru */}
-      <div className="p-6 rounded-2xl shadow-md border border-green-100 mb-6 bg-[#b8e8d1]">
-        <h2 className="text-lg font-semibold mb-4 text-white text-shadow">Recent Chapters</h2>
-        <ul className="text-sm space-y-2">
-          {recentActivity.map((item, index) => (
-            <li key={index} className="flex justify-between border-b border-green-200 pb-2 text-white text-shadow">
-              <span className="font-medium">{item.book_name} {item.chapter_number}</span>
-              <span className="text-xs text-white text-shadow">{new Date(item.inserted_at).toLocaleString()}</span>
-            </li>
-          ))}
-        </ul>
       </div>
     </div>
   );
 }
-
-function StatCard({ icon, label, value, glow }) {
-  return (
-    <div
-      className={`bg-white p-5 rounded-2xl shadow-md text-center border border-gray-200 transition-all duration-300
-      ${glow ? "ring-2 ring-orange-400 animate-pulse" : ""}`}
-    >
-      <div className="flex justify-center items-center mb-2 text-orange-500 text-xl">{icon}</div>
-      <p className="text-sm text-gray-600">{label}</p>
-      <h3 className="text-2xl font-semibold text-gray-800 mt-1">{value}</h3>
-    </div>
-  );
-}
-//test

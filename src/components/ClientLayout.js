@@ -1,16 +1,40 @@
 "use client";
-
+import { useState } from "react";
 import { usePathname } from "next/navigation";
-import SidebarWrapper from "./SidebarWrapper";
+import Sidebar from "./Sidebar";
 
 export default function ClientLayout({ children }) {
   const pathname = usePathname();
-  const isAuthPage = pathname.startsWith("/auth");
+  const showSidebar = ["/dashboard", "/leaderboard", "/reading-progress", "/settings", "/others", "/playerlist", "/profile"]
+    .some(route => pathname.startsWith(route));
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen flex bg-gray-100">
-      {!isAuthPage && <SidebarWrapper />}
-      <main className={`flex-1 p-4 transition-all duration-300 ${!isAuthPage ? 'ml-16 sm:ml-64' : 'flex items-center justify-center'}`}>
+    <div className="flex min-h-screen bg-gray-100 relative">
+      {showSidebar && (
+        <Sidebar
+          isOpen={isSidebarOpen}
+          toggleSidebar={() => setSidebarOpen(!isSidebarOpen)}
+        />
+      )}
+
+      <main className={`flex-1 transition-all duration-300`}>
+        {/* Hamburger button (only on mobile) */}
+        {showSidebar && (
+          <div className="sm:hidden p-4">
+            <button onClick={() => setSidebarOpen(true)} className="text-gray-700">
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          </div>
+        )}
         {children}
       </main>
     </div>

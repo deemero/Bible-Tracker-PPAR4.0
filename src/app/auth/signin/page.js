@@ -1,5 +1,3 @@
-
-
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -9,31 +7,31 @@ export default function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false); // ⬅️ new
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   async function handleSignIn(e) {
     e.preventDefault();
-    setLoading(true); // show loading
-    setError(null); // reset error
+    setLoading(true);
+    setError(null);
 
     const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
       setError(error.message);
-      setLoading(false); // reset loading
+      setLoading(false);
     } else {
-      router.push("/");
+      router.push("/dashboard"); // ✅ Redirect ke dashboard
     }
   }
 
   return (
     <div className="flex items-center justify-center h-screen w-screen bg-white">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-      <h1 className="text-2xl font-bold text-center text-green-700 leading-snug">
-  Bible Project 4.0<br />
-  <span className="text-gray-700 font-medium">Revival Generation</span>
-</h1>
+        <h1 className="text-2xl font-bold text-center text-green-700 leading-snug">
+          Bible Project 4.0<br />
+          <span className="text-gray-700 font-medium">Revival Generation</span>
+        </h1>
 
         <p className="text-gray-600 text-center mb-4">Enter your login credentials</p>
 
@@ -63,9 +61,8 @@ export default function SignIn() {
           </div>
 
           <p className="text-center text-sm text-blue-500 mt-2 hover:underline">
-  <a href="/auth/forgot-password">Forgot your password?</a>
-</p>
-
+            <a href="/auth/forgot-password">Forgot your password?</a>
+          </p>
 
           <button
             type="submit"
