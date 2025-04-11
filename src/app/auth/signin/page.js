@@ -15,13 +15,27 @@ export default function SignIn() {
     setLoading(true);
     setError(null);
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-    if (error) {
-      setError(error.message);
+    if (signInError) {
+      setError(signInError.message);
       setLoading(false);
     } else {
-      router.push("/dashboard"); // ✅ Redirect ke dashboard
+      // ✅ Get current user ID
+      const { data: { user } } = await supabase.auth.getUser();
+
+      // ✅ Update is_online = true
+      if (user) {
+        await supabase
+          .from("profiles")
+          .update({ is_online: true })
+          .eq("id", user.id);
+      }
+
+      router.push("/dashboard");
     }
   }
 
@@ -29,7 +43,8 @@ export default function SignIn() {
     <div className="flex items-center justify-center h-screen w-screen bg-white">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
         <h1 className="text-2xl font-bold text-center text-green-700 leading-snug">
-          Bible Project 4.0<br />
+          Bible Project 4.0
+          <br />
           <span className="text-gray-700 font-medium">Revival Generation</span>
         </h1>
 
@@ -68,14 +83,28 @@ export default function SignIn() {
             type="submit"
             disabled={loading}
             className={`w-full flex justify-center items-center gap-2 py-2 rounded-md transition ${
-              loading ? "bg-green-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"
+              loading
+                ? "bg-green-400 cursor-not-allowed"
+                : "bg-green-600 hover:bg-green-700"
             } text-white`}
           >
             {loading ? (
               <>
                 <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="white" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="white" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="white"
+                    strokeWidth="4"
+                    fill="none"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="white"
+                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                  />
                 </svg>
                 Loading...
               </>

@@ -15,14 +15,30 @@ export default function PlayerListPage() {
 
   const fetchPlayers = async () => {
     const { data, error } = await supabase.rpc("get_all_players_with_email");
-    if (!error) {
-      console.log("✅ Players data:", data);
+  
+    // ✅ Tambah ini untuk debug
+    console.log("🎯 Data dari Supabase:", data);
+    console.log("❌ Error dari Supabase:", error);
+  
+    if (!error && data) {
       const sortedPlayers = data.sort((a, b) => b.progress_percentage - a.progress_percentage);
       setPlayers(sortedPlayers);
     } else {
       console.error("❌ Error fetching players:", error);
     }
   };
+  
+
+  // const fetchPlayers = async () => {
+  //   const { data, error } = await supabase.rpc("get_all_players_with_email"); // ✅ Make sure is_online included
+  //   if (!error) {
+  //     console.log("✅ Players data:", data);
+  //     const sortedPlayers = data.sort((a, b) => b.progress_percentage - a.progress_percentage);
+  //     setPlayers(sortedPlayers);
+  //   } else {
+  //     console.error("❌ Error fetching players:", error);
+  //   }
+  // };
 
   const handleSearch = () => {
     const filteredPlayers = players.filter((user) =>
@@ -30,6 +46,8 @@ export default function PlayerListPage() {
     );
     setPlayers(filteredPlayers);
   };
+
+
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6">
@@ -77,9 +95,20 @@ export default function PlayerListPage() {
 
             <div className="flex-1">
               <div className="font-medium">{user.username}</div>
+
+              {/* ✅ Status Online / Offline */}
+              <div className="text-xs font-semibold mt-0.5">
+                {user.is_online ? (
+                  <span className="text-green-500">🟢 Online</span>
+                ) : (
+                  <span className="text-gray-400">⚫ Offline</span>
+                )}
+              </div>
+
               <div className="text-xs text-gray-500 mb-1">
                 {user.chapters_read} Bab dibaca
               </div>
+
               <div className="w-full bg-gray-200 h-2 rounded-full">
                 <div
                   className={`h-full rounded-full transition-all duration-300 ${

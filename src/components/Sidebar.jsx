@@ -45,7 +45,19 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
     return () => authListener.subscription.unsubscribe();
   }, []);
 
+  // ✅ Updated logout function
   async function handleLogout() {
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // ✅ Update is_online = false
+    if (user) {
+      await supabase
+        .from("profiles")
+        .update({ is_online: false })
+        .eq("id", user.id);
+    }
+
+    // ✅ Logout from Supabase
     await supabase.auth.signOut();
     router.push("/");
   }
@@ -95,7 +107,7 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
               href={item.href}
               pathname={pathname}
               color={item.color}
-              toggleSidebar={toggleSidebar} // ✅ pass toggle
+              toggleSidebar={toggleSidebar}
             />
           ))}
       </nav>
@@ -130,7 +142,7 @@ function SidebarItem({ icon, text, href, pathname, badge = null, color = "green"
       <button
         onClick={() => {
           router.push(href);
-          toggleSidebar(); // ✅ auto close after click
+          toggleSidebar();
         }}
         className={`flex items-center gap-3 text-sm py-2 px-3 rounded-lg transition-all w-full justify-start ${colorClass}`}
       >
