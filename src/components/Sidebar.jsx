@@ -45,10 +45,9 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
     return () => authListener.subscription.unsubscribe();
   }, []);
 
-  // ✅ Logout dan terus redirect ke "/"
   async function handleLogout() {
     await supabase.auth.signOut();
-    router.push("/"); // Redirect ke intro page
+    router.push("/");
   }
 
   if (!user) return null;
@@ -96,6 +95,7 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
               href={item.href}
               pathname={pathname}
               color={item.color}
+              toggleSidebar={toggleSidebar} // ✅ pass toggle
             />
           ))}
       </nav>
@@ -114,7 +114,7 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
   );
 }
 
-function SidebarItem({ icon, text, href, pathname, badge = null, color = "green" }) {
+function SidebarItem({ icon, text, href, pathname, badge = null, color = "green", toggleSidebar }) {
   const router = useRouter();
   const isActive = pathname === href;
 
@@ -128,7 +128,10 @@ function SidebarItem({ icon, text, href, pathname, badge = null, color = "green"
   return (
     <div className="relative w-full">
       <button
-        onClick={() => router.push(href)}
+        onClick={() => {
+          router.push(href);
+          toggleSidebar(); // ✅ auto close after click
+        }}
         className={`flex items-center gap-3 text-sm py-2 px-3 rounded-lg transition-all w-full justify-start ${colorClass}`}
       >
         {icon}
