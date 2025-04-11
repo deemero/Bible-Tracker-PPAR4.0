@@ -1,6 +1,8 @@
 import "../globals.css";
 import ClientLayout from "@/components/ClientLayout";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Toaster } from "react-hot-toast";
+import AutoLogoutProvider from "@/components/AutoLogoutProvider";
 
 export const metadata = {
   title: "Bible Tracker",
@@ -20,95 +22,13 @@ export default function RootLayout({ children }) {
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <link rel="apple-touch-icon" sizes="180x180" href="/bpr-180.png" />
       </head>
-      <body className="bg-background text-foreground">
-        <ClientLayout>{children}</ClientLayout>
+      <body className="bg-background text-foreground h-full">
+        <AutoLogoutProvider>
+          <Toaster position="top-center" reverseOrder={false} />
+          <ClientLayout>{children}</ClientLayout>
+        </AutoLogoutProvider>
         <SpeedInsights />
       </body>
     </html>
   );
 }
-
-
-
-
-
-// import "./globals.css";
-// import Sidebar from "../components/Sidebar";
-
-// export const metadata = {
-//   title: "Dashboard",
-//   description: "Sidebar Example",
-// };
-
-
-// export default function RootLayout({ children }) {
-//   return (
-//     <html lang="en">
-//       <body className="flex">
-//         <Sidebar />
-//         <main className="ml-64 flex-1 p-4">{children}</main>
-//       </body>
-//     </html>
-//   );
-// }
-
-
-
-// import "./globals.css";
-// import ClientWrapper from "../components/ClientWrapper";
-
-// export const metadata = {
-//   title: "Dashboard",
-//   description: "Sidebar Example",
-// };
-
-// export default function RootLayout({ children }) {
-//   return (
-//     <html lang="en">
-//       <body className="flex">
-//         <ClientWrapper>{children}</ClientWrapper>
-//       </body>
-//     </html>
-//   );
-// }
-
-// import "./globals.css";
-// import Sidebar from "../components/Sidebar";
-
-// export const metadata = {
-//   title: "Dashboard",
-//   description: "Sidebar Example",
-// };
-
-
-// export default function RootLayout({ children }) {
-//   return (
-//     <html lang="en">
-//       <body className="flex">
-//         <Sidebar />
-//         <main className="ml-64 flex-1 p-4">{children}</main>
-//       </body>
-//     </html>
-//   );
-// }
-
-
-
-// import "./globals.css";
-// import ClientWrapper from "../components/ClientWrapper";
-
-// export const metadata = {
-//   title: "Dashboard",
-//   description: "Sidebar Example",
-// };
-
-// export default function RootLayout({ children }) {
-//   return (
-//     <html lang="en">
-//       <body className="flex">
-//         <ClientWrapper>{children}</ClientWrapper>
-//       </body>
-//     </html>
-//   );
-// }
-

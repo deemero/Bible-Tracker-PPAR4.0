@@ -1,7 +1,18 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Home, BookOpen, BarChartBig, Settings, Menu, LogOut, Search, Info, Users, X } from "lucide-react";
+import {
+  Home,
+  BookOpen,
+  BarChartBig,
+  Settings,
+  Menu,
+  LogOut,
+  Search,
+  Info,
+  Users,
+  X,
+} from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
 export default function Sidebar({ isOpen, toggleSidebar }) {
@@ -34,9 +45,10 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
     return () => authListener.subscription.unsubscribe();
   }, []);
 
+  // ✅ Logout dan terus redirect ke "/"
   async function handleLogout() {
     await supabase.auth.signOut();
-    router.push("/auth/signin");
+    router.push("/"); // Redirect ke intro page
   }
 
   if (!user) return null;
@@ -53,11 +65,7 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
     >
       <div className="flex justify-between items-center px-4 py-4 border-b">
         <h1 className="text-lg font-bold text-green-600">Bible Project 4.0</h1>
-        {/* X close button (mobile only) */}
-        <button
-          className="sm:hidden text-gray-700"
-          onClick={toggleSidebar}
-        >
+        <button className="sm:hidden text-gray-700" onClick={toggleSidebar}>
           <X size={20} />
         </button>
       </div>
@@ -92,6 +100,7 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
           ))}
       </nav>
 
+      {/* Logout Button */}
       <div className="mb-6 mt-4 w-full px-4">
         <button
           onClick={handleLogout}

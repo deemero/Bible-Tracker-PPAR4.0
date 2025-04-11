@@ -1,26 +1,66 @@
 "use client";
-import { useState } from "react";
-import { usePathname } from "next/navigation";
+
+import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
 import Sidebar from "./Sidebar";
 
 export default function ClientLayout({ children }) {
   const pathname = usePathname();
-  const showSidebar = ["/dashboard", "/leaderboard", "/reading-progress", "/settings", "/others", "/playerlist", "/profile"]
-    .some(route => pathname.startsWith(route));
+  const router = useRouter();
+
+  // ✅ Hanya pages yang perlu login akan check session
+  const protectedRoutes = [
+    "/dashboard",
+    "/leaderboard",
+    "/reading-progress",
+    "/settings",
+    "/others",
+    "/playerlist",
+    "/profile",
+  ];
+
+  const isProtected = protectedRoutes.some((route) => pathname.startsWith(route));
+  const [checkingSession, setCheckingSession] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    const checkSession = async () => {
+      if (!isProtected) {
+        setCheckingSession(false); // ✅ Skip check for public pages
+        return;
+      }
+
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session) {
+        setIsLoggedIn(false);
+        router.push("/");
+      } else {
+        setIsLoggedIn(true);
+      }
+
+      setCheckingSession(false);
+    };
+
+    checkSession();
+  }, [pathname]);
+
+  if (checkingSession) return null;
 
   return (
     <div className="flex min-h-screen bg-gray-100 relative">
-      {showSidebar && (
+      {isProtected && (
         <Sidebar
           isOpen={isSidebarOpen}
           toggleSidebar={() => setSidebarOpen(!isSidebarOpen)}
         />
       )}
 
-      <main className={`flex-1 transition-all duration-300`}>
-        {/* Hamburger button (only on mobile) */}
-        {showSidebar && (
+      <main className="flex-1 transition-all duration-300">
+        {/* Hamburger for mobile */}
+        {isProtected && (
           <div className="sm:hidden p-4">
             <button onClick={() => setSidebarOpen(true)} className="text-gray-700">
               <svg
