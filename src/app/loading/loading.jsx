@@ -5,7 +5,7 @@ export default function LoadingScreen() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white">
       <Image
-        src="/bpr.png" // Pastikan gambar ada dalam public folder
+        src="/bprp.png" // Pastikan gambar ada dalam public folder
         alt="Bible Project Logo"
         width={150}
         height={150}
