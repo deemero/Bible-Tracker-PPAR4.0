@@ -1,18 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
 import {
   Home,
   BookOpen,
-  BarChartBig,
   Settings,
-  LogOut,
-  Search,
   Info,
   Users,
-  X,
+  UserCheck, // Ganti UserPlus
+  Inbox,     // Ganti Mail
+  BarChartBig,
+  LogOut,
+  Search,
+  X
 } from "lucide-react";
+
+import { useState, useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
 export default function Sidebar({ isOpen = true, toggleSidebar }) {
@@ -36,7 +39,12 @@ export default function Sidebar({ isOpen = true, toggleSidebar }) {
         { icon: <Home size={20} />, text: "Home", href: "/dashboard", color: "blue" },
         { icon: <BookOpen size={20} />, text: "Reading Progress", href: "/reading-progress", color: "green" },
         { icon: <Settings size={20} />, text: "Settings", href: "/settings", color: "green" },
-        { icon: <Info size={20} />, text: "Others", href: "/others", color: "green" }
+        { icon: <Info size={20} />, text: "Others", href: "/others", color: "green" },
+
+        // 🔥 Friend System Section
+        { icon: <Users size={20} />, text: "Friend List", href: "/friend-list", color: "indigo" },
+        { icon: <UserCheck size={20} />, text: "Add Friend", href: "/find-friend", color: "emerald" },
+        { icon: <Inbox size={20} />, text: "Requests", href: "/friend-requests", color: "orange" },
       ];
 
   useEffect(() => {
@@ -143,6 +151,12 @@ function SidebarItem({ icon, text, href, pathname, badge = null, color = "green"
       ? "bg-blue-100 text-blue-700"
       : isActive && color === "green"
       ? "bg-green-100 text-green-700"
+      : isActive && color === "orange"
+      ? "bg-orange-100 text-orange-700"
+      : isActive && color === "indigo"
+      ? "bg-indigo-100 text-indigo-700"
+      : isActive && color === "emerald"
+      ? "bg-emerald-100 text-emerald-700"
       : "text-gray-700 hover:bg-gray-100";
 
   return (

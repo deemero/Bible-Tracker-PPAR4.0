@@ -25,7 +25,7 @@ export default function SelectModePage() {
   return (
     <div className="max-w-md mx-auto mt-24 bg-white p-6 rounded-xl shadow text-center space-y-6">
       <h1 className="text-2xl font-bold text-green-700">Pilih Mod Anda</h1>
-      <p className="text-gray-500 text-sm">Anda ingin menyertai kumpulan gereja atau teruskan dalam mod global?</p>
+      <p className="text-gray-500 text-sm">Anda ingin menyertai kumpulan gereja atau ke account anda?</p>
 
       <div className="flex flex-col gap-4">
         <button
@@ -39,7 +39,7 @@ export default function SelectModePage() {
           onClick={() => router.push("/dashboard")}
           className="bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition"
         >
-          🌍 Teruskan dalam Mod Global
+          🫡 Teruskan ke Account anda
         </button>
       </div>
     </div>
