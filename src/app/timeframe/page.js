@@ -48,7 +48,7 @@ export default function TimeToReadPage() {
   return (
     <div className="max-w-5xl mx-auto p-6">
       <h1 className="text-3xl sm:text-4xl font-bold text-center text-gray-800 mb-10">
-        📖 Estimasi Masa Baca Alkitab
+        Estimasi Masa Baca Alkitab
       </h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
@@ -116,13 +116,13 @@ export default function TimeToReadPage() {
           onClick={calculateEstimate}
           className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-xl shadow-md transition-all duration-200"
         >
-          Kira Masa 📚
+        Calculate
         </button>
       </div>
 
       {estimate !== null && (
         <div className="mt-8 bg-green-100 text-green-900 rounded-xl px-6 py-4 font-semibold text-center text-lg">
-          📘 Anggaran masa untuk membaca: <span className="font-bold">{convertToHourMin(estimate)}</span>
+          Anggaran masa untuk membaca: <span className="font-bold">{convertToHourMin(estimate)}</span>
         </div>
       )}
     </div>
