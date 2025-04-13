@@ -42,7 +42,7 @@ export default function ChurchBookProgressPage() {
       .from("reading_progress")
       .select("chapter_number, is_read")
       .eq("user_id", uid)
-      .eq("book_name", selectedBook.name);
+      .eq("book_name", selectedBook.name.toLowerCase()); // ✅ use lowercase
 
     if (error) return console.error(error);
 
@@ -73,10 +73,10 @@ export default function ChurchBookProgressPage() {
       .from("reading_progress")
       .upsert({
         user_id: userId,
-        book_name: selectedBook.name,
+        book_name: selectedBook.name.toLowerCase(), // ✅ force lowercase on insert
         chapter_number: chapter,
         is_read: isChecked,
-        church_id: churchId, // ✅ church mode
+        church_id: churchId,
       }, {
         onConflict: ['user_id', 'book_name', 'chapter_number']
       });

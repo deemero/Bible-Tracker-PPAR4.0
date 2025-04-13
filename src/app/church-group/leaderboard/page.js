@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import Image from "next/image";
@@ -31,17 +32,44 @@ export default function ChurchLeaderboardPage() {
   }, []);
 
   const fetchAll = async (cid) => {
-    const { data: overall } = await supabase.rpc("get_church_overall_leaders", { church_uuid: cid });
-    const { data: monthly } = await supabase.rpc("get_church_monthly_leaders", { church_uuid: cid });
-    const { data: streak } = await supabase
-      .from("church_streak_leaders")
-      .select("user_id, username, avatar_url, reading_streak")
-      .eq("church_id", cid)
-      .order("reading_streak", { ascending: false });
+    const { data: usersInChurch } = await supabase
+      .from("profiles")
+      .select("id, username, avatar_url, reading_streak") // ✅ Ambil streak terus dari profiles
+      .eq("church_id", cid);
 
-    if (overall) setOverallLeaders(overall);
-    if (monthly) setMonthlyLeaders(monthly);
-    if (streak) setStreakLeaders(streak);
+    const userIds = usersInChurch.map((u) => u.id);
+    const userMap = Object.fromEntries(usersInChurch.map(u => [u.id, u]));
+
+    const { data: progressData } = await supabase
+      .from("reading_progress")
+      .select("user_id, is_read")
+      .eq("is_read", true)
+      .in("user_id", userIds);
+
+    const chaptersMap = {};
+    progressData.forEach((row) => {
+      chaptersMap[row.user_id] = (chaptersMap[row.user_id] || 0) + 1;
+    });
+
+    const finalList = userIds.map((id) => {
+      const chaptersRead = chaptersMap[id] || 0;
+      return {
+        ...userMap[id],
+        chapters_read: chaptersRead,
+        progress_percentage: Math.round((chaptersRead * 100) / 1189),
+      };
+    });
+
+    const sorted = [...finalList].sort((a, b) => b.progress_percentage - a.progress_percentage);
+    const top10 = sorted.slice(0, 10);
+    const top5Monthly = sorted.slice(0, 5);
+    const streakSorted = [...finalList]
+      .filter(u => u.reading_streak > 0)
+      .sort((a, b) => b.reading_streak - a.reading_streak);
+
+    setOverallLeaders(top10);
+    setMonthlyLeaders(top5Monthly);
+    setStreakLeaders(streakSorted);
   };
 
   const renderList = (list) => {

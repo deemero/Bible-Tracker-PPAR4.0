@@ -24,7 +24,6 @@ function FancyProgressBar({ value }) {
 }
 
 export default function ChurchReadingProgress() {
-  const [userId, setUserId] = useState(null);
   const [progressMap, setProgressMap] = useState({});
   const [overallProgress, setOverallProgress] = useState(0);
   const [showModal, setShowModal] = useState(false);
@@ -32,15 +31,13 @@ export default function ChurchReadingProgress() {
   const [modalType, setModalType] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const allBooks = bibleBooks.flatMap(sec => sec.books);
+  const allBooks = bibleBooks.flatMap((sec) => sec.books);
   const totalChapters = allBooks.reduce((sum, book) => sum + book.chapters, 0);
 
   useEffect(() => {
-    const fetchUserAndProgress = async () => {
+    const fetchChurchProgress = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-
-      setUserId(user.id);
 
       const { data: profile } = await supabase
         .from("profiles")
@@ -50,82 +47,66 @@ export default function ChurchReadingProgress() {
 
       if (!profile?.church_id) return;
 
-      const { data: users } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("church_id", profile.church_id);
-
-      const userIds = users.map(u => u.id);
-      await calculateProgress(userIds);
-    };
-
-    fetchUserAndProgress();
-  }, []);
-
-  const calculateProgress = async (userIds) => {
-    let allData = [];
-    let start = 0;
-    const limit = 1000;
-    let hasMore = true;
-
-    while (hasMore) {
-      const { data, error } = await supabase
+      const { data: readingData, error } = await supabase
         .from("reading_progress")
         .select("book_name, chapter_number, is_read, user_id")
-        .in("user_id", userIds)
-        .range(start, start + limit - 1);
+        .eq("church_id", profile.church_id);
 
       if (error) {
         console.error("❌ Supabase Error:", error);
-        break;
+        return;
       }
 
-      if (data.length > 0) {
-        allData = [...allData, ...data];
-        start += limit;
-        hasMore = data.length === limit;
-      } else {
-        hasMore = false;
+      const grouped = {};
+      let totalRead = 0;
+      const userSet = new Set();
+
+      for (const row of readingData) {
+        userSet.add(row.user_id);
+        if (row.is_read) {
+          const bookName = row.book_name.toLowerCase(); // ✅ normalize for comparison
+          if (!grouped[bookName]) grouped[bookName] = new Set();
+          grouped[bookName].add(`${row.user_id}-${row.chapter_number}`);
+          totalRead += 1;
+        }
       }
-    }
 
-    const grouped = {};
-    let totalRead = 0;
+      const totalUsers = Math.max(userSet.size, 1);
+      const newProgress = {};
 
-    for (const row of allData) {
-      if (row.is_read) {
-        if (!grouped[row.book_name]) grouped[row.book_name] = new Set();
-        grouped[row.book_name].add(`${row.user_id}-${row.chapter_number}`);
-        totalRead += 1;
-      }
-    }
+      allBooks.forEach(book => {
+        const bookKey = book.name.toLowerCase();
+        const readCount = grouped[bookKey]?.size || 0;
+        const maxProgress = book.chapters * totalUsers;
+        const percentage = maxProgress === 0 ? 0 : (readCount / maxProgress) * 100;
+        newProgress[book.name] = Math.min(100, Math.round(percentage));
+      });
 
-    const newProgress = {};
-    allBooks.forEach(book => {
-      const readCount = grouped[book.name]?.size || 0;
-      newProgress[book.name] = Math.round((readCount / (book.chapters * userIds.length)) * 100);
-    });
+      const totalMaxChapters = totalChapters * totalUsers;
+      const totalPercentage = totalMaxChapters === 0 ? 0 : (totalRead / totalMaxChapters) * 100;
+      setProgressMap(newProgress);
+      setOverallProgress(Math.min(100, Math.round(totalPercentage)));
+    };
 
-    setProgressMap(newProgress);
-    setOverallProgress(Math.round((totalRead / (totalChapters * userIds.length)) * 100));
-  };
+    fetchChurchProgress();
+  }, []);
 
   useEffect(() => {
-    const currentWahyuProgress = progressMap["Wahyu"];
-    const currentMaleakhiProgress = progressMap["Maleakhi"];
-    const currentYohanesProgress = progressMap["Yohanes"];
+    const currentWahyu = progressMap["Wahyu"];
+    const currentMaleakhi = progressMap["Maleakhi"];
+    const currentYohanes = progressMap["Yohanes"];
 
-    if (currentWahyuProgress === 100 && !localStorage.getItem("rev_achievement_done")) {
+    if (currentWahyu === 100 && !localStorage.getItem("rev_achievement_done")) {
       setModalType("wahyu");
       setWaitingForSoundConfirm(true);
     }
 
-    if (currentMaleakhiProgress === 100 && currentWahyuProgress < 100 && !localStorage.getItem("maleakhi_half_done")) {
+    if (currentMaleakhi === 100 && currentWahyu < 100 && !localStorage.getItem("maleakhi_half_done")) {
       setModalType("maleakhi");
       setWaitingForSoundConfirm(true);
     }
 
-    if (currentYohanesProgress === 100 && !localStorage.getItem("yohanes_love_done")) {
+    if (currentYohanes === 100 && !localStorage.getItem("yohanes_love_done")) {
       setModalType("yohanes");
       setWaitingForSoundConfirm(true);
     }
@@ -144,7 +125,6 @@ export default function ChurchReadingProgress() {
         <FancyProgressBar value={overallProgress} />
       </div>
 
-      {/* Search Bar */}
       <div className="flex justify-center mb-8">
         <input
           type="text"
