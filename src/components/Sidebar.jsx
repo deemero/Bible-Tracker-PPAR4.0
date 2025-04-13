@@ -30,6 +30,7 @@ export default function Sidebar({ isOpen = true, toggleSidebar }) {
     ? [
         { icon: <Home size={20} />, text: "Church Dashboard", href: "/church-group/dashboard", color: "blue" },
         // { icon: <BookOpen size={20} />, text: "Reading Progress", href: "/church-group/reading-progress", color: "green" },
+        // { icon: <BookOpen size={20} />, text: "Reading Progress", href: "/church-group/reading-progress", color: "green" },
         { icon: <BarChartBig size={20} />, text: "Church Leaderboard", href: "/church-group/leaderboard", color: "green" },
         { icon: <Settings size={20} />, text: "Settings", href: "/church-group/settings", color: "green" },
         { icon: <Info size={20} />, text: "Others", href: "/church-group/others", color: "green" },
@@ -38,6 +39,7 @@ export default function Sidebar({ isOpen = true, toggleSidebar }) {
     : [
         { icon: <Home size={20} />, text: "Home", href: "/dashboard", color: "blue" },
         { icon: <BookOpen size={20} />, text: "Reading Progress", href: "/reading-progress", color: "green" },
+        { icon: <BookOpen size={20} />, text: "Bible Reading Time", href: "/timeframe", color: "green" },
         { icon: <Settings size={20} />, text: "Settings", href: "/settings", color: "green" },
         { icon: <Info size={20} />, text: "Others", href: "/others", color: "green" },
 
