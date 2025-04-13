@@ -9,7 +9,8 @@ export default function ClientLayout({ children }) {
   const pathname = usePathname();
   const router = useRouter();
 
-  // ✅ Hanya pages yang perlu login akan check session
+  const isChurchMode = pathname.startsWith("/church-group");
+
   const protectedRoutes = [
     "/dashboard",
     "/leaderboard",
@@ -18,27 +19,29 @@ export default function ClientLayout({ children }) {
     "/others",
     "/playerlist",
     "/profile",
+    "/church-group/dashboard",
+    "/church-group/leaderboard",
+    "/church-group/reading-progress",
+    "/church-group/settings",
+    "/church-group/others",
+    "/church-group/playerlist",
   ];
 
   const isProtected = protectedRoutes.some((route) => pathname.startsWith(route));
   const [checkingSession, setCheckingSession] = useState(true);
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const checkSession = async () => {
       if (!isProtected) {
-        setCheckingSession(false); // ✅ Skip check for public pages
+        setCheckingSession(false);
         return;
       }
 
       const { data: { session } } = await supabase.auth.getSession();
 
       if (!session) {
-        setIsLoggedIn(false);
         router.push("/");
-      } else {
-        setIsLoggedIn(true);
       }
 
       setCheckingSession(false);
@@ -50,7 +53,7 @@ export default function ClientLayout({ children }) {
   if (checkingSession) return null;
 
   return (
-    <div className="flex min-h-screen bg-gray-100 relative">
+    <div className="flex min-h-screen bg-white text-gray-900 relative">
       {isProtected && (
         <Sidebar
           isOpen={isSidebarOpen}
@@ -59,8 +62,8 @@ export default function ClientLayout({ children }) {
       )}
 
       <main className="flex-1 transition-all duration-300">
-        {/* Hamburger for mobile */}
-        {isProtected && (
+        {/* ✅ Hamburger hanya muncul bila sidebar ditutup */}
+        {isProtected && !isSidebarOpen && (
           <div className="sm:hidden p-4">
             <button onClick={() => setSidebarOpen(true)} className="text-gray-700">
               <svg

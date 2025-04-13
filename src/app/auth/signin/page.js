@@ -35,7 +35,7 @@ export default function SignIn() {
           .eq("id", user.id);
       }
 
-      router.push("/dashboard");
+      router.push("/select-mode");
     }
   }
 

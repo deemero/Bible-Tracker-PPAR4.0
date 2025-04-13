@@ -29,16 +29,6 @@ export default function PlayerListPage() {
   };
   
 
-  // const fetchPlayers = async () => {
-  //   const { data, error } = await supabase.rpc("get_all_players_with_email"); // ✅ Make sure is_online included
-  //   if (!error) {
-  //     console.log("✅ Players data:", data);
-  //     const sortedPlayers = data.sort((a, b) => b.progress_percentage - a.progress_percentage);
-  //     setPlayers(sortedPlayers);
-  //   } else {
-  //     console.error("❌ Error fetching players:", error);
-  //   }
-  // };
 
   const handleSearch = () => {
     const filteredPlayers = players.filter((user) =>
