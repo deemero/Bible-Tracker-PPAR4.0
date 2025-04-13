@@ -3,11 +3,12 @@
 import {
   Home,
   BookOpen,
+  BookOpenText, // ✅ Ganti Bible icon
   Settings,
   Info,
   Users,
-  UserCheck, // Ganti UserPlus
-  Inbox,     // Ganti Mail
+  UserCheck,
+  Inbox,
   BarChartBig,
   LogOut,
   Search,
@@ -29,8 +30,6 @@ export default function Sidebar({ isOpen = true, toggleSidebar }) {
   const navItems = isChurchMode
     ? [
         { icon: <Home size={20} />, text: "Church Dashboard", href: "/church-group/dashboard", color: "blue" },
-        // { icon: <BookOpen size={20} />, text: "Reading Progress", href: "/church-group/reading-progress", color: "green" },
-        // { icon: <BookOpen size={20} />, text: "Reading Progress", href: "/church-group/reading-progress", color: "green" },
         { icon: <BarChartBig size={20} />, text: "Church Leaderboard", href: "/church-group/leaderboard", color: "green" },
         { icon: <Settings size={20} />, text: "Settings", href: "/church-group/settings", color: "green" },
         { icon: <Info size={20} />, text: "Others", href: "/church-group/others", color: "green" },
@@ -39,11 +38,9 @@ export default function Sidebar({ isOpen = true, toggleSidebar }) {
     : [
         { icon: <Home size={20} />, text: "Home", href: "/dashboard", color: "blue" },
         { icon: <BookOpen size={20} />, text: "Reading Progress", href: "/reading-progress", color: "green" },
-        { icon: <BookOpen size={20} />, text: "Bible Reading Time", href: "/timeframe", color: "green" },
+        { icon: <BookOpenText size={20} />, text: "Bible Reading Time", href: "/timeframe", color: "green" },
         { icon: <Settings size={20} />, text: "Settings", href: "/settings", color: "green" },
         { icon: <Info size={20} />, text: "Others", href: "/others", color: "green" },
-
-        // 🔥 Friend System Section
         { icon: <Users size={20} />, text: "Friend List", href: "/friend-list", color: "indigo" },
         { icon: <UserCheck size={20} />, text: "Add Friend", href: "/find-friend", color: "emerald" },
         { icon: <Inbox size={20} />, text: "Requests", href: "/friend-requests", color: "orange" },

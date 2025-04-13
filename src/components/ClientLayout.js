@@ -8,7 +8,6 @@ import Sidebar from "./Sidebar";
 export default function ClientLayout({ children }) {
   const pathname = usePathname();
   const router = useRouter();
-
   const isChurchMode = pathname.startsWith("/church-group");
 
   const protectedRoutes = [
@@ -42,6 +41,26 @@ export default function ClientLayout({ children }) {
 
       if (!session) {
         router.push("/");
+        return;
+      }
+
+      // ✅ Auto insert user to profiles if not exists
+      const { user } = session;
+      const { data: existingProfile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("id", user.id)
+        .single();
+
+      if (!existingProfile) {
+        const username = user.email.split("@")[0];
+        await supabase.from("profiles").insert({
+          id: user.id,
+          email: user.email,
+          username: username,
+          is_online: true,
+          avatar_url: `https://api.dicebear.com/6.x/thumbs/svg?seed=${username}`,
+        });
       }
 
       setCheckingSession(false);

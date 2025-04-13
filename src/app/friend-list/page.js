@@ -15,7 +15,6 @@ export default function FriendListPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // ✅ Sync email ke profiles jika kosong
       const { data: profile } = await supabase
         .from("profiles")
         .select("email, username")
@@ -35,15 +34,13 @@ export default function FriendListPage() {
         else console.log("✅ Email synced to profiles");
       }
 
-      // ✅ Ambil semua kawan accepted
       const { data: friendsData } = await supabase
         .from("friends")
         .select("sender_id, receiver_id")
         .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
         .eq("status", "accepted");
 
-      const friendIds = friendsData
-        .map(f => f.sender_id === user.id ? f.receiver_id : f.sender_id);
+      const friendIds = friendsData.map(f => f.sender_id === user.id ? f.receiver_id : f.sender_id);
 
       if (friendIds.length === 0) return setFriends([]);
 
@@ -112,17 +109,13 @@ export default function FriendListPage() {
           >
             <div className="text-lg font-bold w-6 text-gray-600">{index + 1}</div>
 
-            {user.avatar_url ? (
-              <Image
-                src={user.avatar_url}
-                alt="Avatar"
-                width={40}
-                height={40}
-                className="rounded-full object-cover w-10 h-10"
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-gray-300" />
-            )}
+            <Image
+              src={user.avatar_url?.startsWith("http") ? user.avatar_url : `https://api.dicebear.com/6.x/thumbs/svg?seed=${user.username}`}
+              alt="Avatar"
+              width={40}
+              height={40}
+              className="rounded-full object-cover w-10 h-10"
+            />
 
             <div className="flex-1">
               <div className="font-medium">{user.username}</div>
