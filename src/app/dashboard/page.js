@@ -13,7 +13,8 @@ export default function Home() {
   const [userId, setUserId] = useState(null);
   const [userName, setUserName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState(null);
-  const [isOnline, setIsOnline] = useState(false); // ✅ Tambah sini
+  const [isOnline, setIsOnline] = useState(false);
+  const [churchName, setChurchName] = useState("Loading...");
   const [overallProgress, setOverallProgress] = useState(0);
   const [monthlyProgress, setMonthlyProgress] = useState(0);
   const [ranking, setRanking] = useState(null);
@@ -41,9 +42,7 @@ export default function Home() {
     checkSession();
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
-        router.push("/");
-      }
+      if (!session) router.push("/");
     });
 
     return () => listener?.subscription?.unsubscribe?.();
@@ -62,14 +61,15 @@ export default function Home() {
   const getUser = async (uid) => {
     const { data, error } = await supabase
       .from("profiles")
-      .select("username, avatar_url, is_online") // ✅ Ambil is_online
+      .select("username, avatar_url, is_online, church_id, churches(name)")
       .eq("id", uid)
       .single();
 
     if (!error && data) {
       setUserName(data.username);
       setAvatarUrl(data.avatar_url);
-      setIsOnline(data.is_online); // ✅ Simpan status online
+      setIsOnline(data.is_online);
+      setChurchName(data.churches?.name || "Tiada Gereja");
     }
   };
 
@@ -93,37 +93,23 @@ export default function Home() {
   };
 
   const getOverallProgress = async (uid) => {
-    let allData = [], start = 0, hasMore = true, limit = 1000;
-    while (hasMore) {
-      const { data } = await supabase
-        .from("reading_progress")
-        .select("is_read")
-        .eq("user_id", uid)
-        .range(start, start + limit - 1);
-      allData = [...allData, ...data];
-      start += limit;
-      hasMore = data.length === limit;
-    }
-    const readCount = allData.filter(d => d.is_read).length;
+    const { data } = await supabase
+      .from("reading_progress")
+      .select("is_read")
+      .eq("user_id", uid);
+    const readCount = data?.filter(d => d.is_read).length || 0;
     setOverallProgress(Math.round((readCount / totalChapters) * 100));
   };
 
   const getMonthlyProgress = async (uid) => {
     const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
-    let allData = [], start = 0, hasMore = true, limit = 1000;
-    while (hasMore) {
-      const { data } = await supabase
-        .from("reading_progress")
-        .select("is_read, inserted_at")
-        .eq("user_id", uid)
-        .eq("is_read", true)
-        .gte("inserted_at", startOfMonth)
-        .range(start, start + limit - 1);
-      allData = [...allData, ...data];
-      start += limit;
-      hasMore = data.length === limit;
-    }
-    setMonthlyProgress(Math.round((allData.length / totalChapters) * 100));
+    const { data } = await supabase
+      .from("reading_progress")
+      .select("is_read, inserted_at")
+      .eq("user_id", uid)
+      .eq("is_read", true)
+      .gte("inserted_at", startOfMonth);
+    setMonthlyProgress(Math.round((data?.length || 0) / totalChapters * 100));
   };
 
   const getRanking = async (uid) => {
@@ -133,7 +119,7 @@ export default function Home() {
       .eq("is_read", true);
 
     const userProgressMap = {};
-    progressData.forEach(row => {
+    progressData?.forEach(row => {
       userProgressMap[row.user_id] = (userProgressMap[row.user_id] || 0) + 1;
     });
 
@@ -158,7 +144,7 @@ export default function Home() {
       .eq("is_read", true)
       .order("inserted_at", { ascending: false })
       .limit(5);
-    setRecentActivity(data);
+    setRecentActivity(data || []);
   };
 
   return (
@@ -166,14 +152,13 @@ export default function Home() {
       {showConfetti && <Confetti numberOfPieces={150} recycle={false} />}
       <Toaster position="top-center" />
 
-      {/* Profile Card */}
       <div className="bg-white rounded-2xl p-6 shadow-md mb-6 flex flex-col items-center text-center">
         {avatarUrl ? (
           <img src={avatarUrl} alt="Profile" className="w-24 h-24 rounded-full shadow object-cover mb-4" />
         ) : <div className="w-24 h-24 rounded-full bg-gray-300 mb-4" />}
+
         <h1 className="text-2xl font-bold text-gray-800">Hello {userName}!</h1>
 
-        {/* ✅ ONLINE STATUS */}
         <p className="text-sm mt-1 font-semibold">
           {isOnline ? (
             <span className="text-green-500">🟢 Online</span>
@@ -182,13 +167,16 @@ export default function Home() {
           )}
         </p>
 
-        <p className="text-sm text-gray-500 tracking-wide">
-          Welcome back to <span className="font-semibold text-green-600">Bible Project 4.0</span> <br />
+        <p className="text-sm text-gray-600 font-medium mt-1">
+          Active Church: <span className="text-blue-600">{churchName}</span>
+        </p>
+
+        <p className="text-sm text-gray-500 tracking-wide mt-2">
+          Welcome back to <span className="font-semibold text-green-600">Bible Project 4.0</span><br />
           <span className="text-gray-600">Revival Generation</span>
         </p>
       </div>
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard icon={<TrendingUp size={20} />} label="Overall Progress" value={`${overallProgress}%`} />
         <StatCard icon={<CalendarCheck size={20} />} label="Monthly Ticked" value={`${monthlyProgress}%`} />
@@ -196,7 +184,6 @@ export default function Home() {
         <StatCard icon={<Flame size={20} />} label="Reading Streak" value={`${readingStreak} days`} glow={readingStreak > 0} />
       </div>
 
-      {/* Recent Reads */}
       <div className="p-6 rounded-2xl shadow-md border border-green-100 mb-6 bg-[#b8e8d1]">
         <h2 className="text-lg font-semibold mb-4 text-white text-shadow">Recent Chapters</h2>
         <ul className="text-sm space-y-2">

@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
@@ -14,6 +15,7 @@ export default function Home() {
   const [ranking, setRanking] = useState(null);
   const [totalUsers, setTotalUsers] = useState(0);
   const [recentActivity, setRecentActivity] = useState([]);
+  const [churchName, setChurchName] = useState("Tiada gereja dipilih");
   const router = useRouter();
 
   const totalChapters = bibleBooks.flatMap(sec => sec.books).reduce((sum, book) => sum + book.chapters, 0);
@@ -38,17 +40,29 @@ export default function Home() {
   const getUser = async (uid) => {
     const { data, error } = await supabase
       .from("profiles")
-      .select("username, avatar_url")
+      .select(`
+        username,
+        avatar_url,
+        active_church_id,
+        churches (
+          name
+        )
+      `)
       .eq("id", uid)
       .single();
-    if (!error) {
+
+    if (!error && data) {
       setUserName(data.username);
       setAvatarUrl(data.avatar_url);
+      setChurchName(data.churches?.name || "Tiada gereja dipilih");
     }
   };
 
   const getOverallProgress = async (uid) => {
-    const { data, error } = await supabase.from("reading_progress").select("is_read").eq("user_id", uid);
+    const { data, error } = await supabase
+      .from("reading_progress")
+      .select("is_read")
+      .eq("user_id", uid);
     if (error) return console.error(error);
     const readCount = data.filter((d) => d.is_read).length;
     const percentage = Math.round((readCount / totalChapters) * 100);
@@ -123,6 +137,9 @@ export default function Home() {
         )}
         <h1 className="text-xl font-bold text-black">Selamat datang, {userName}!</h1>
         <p className="text-sm text-gray-500">Welcome back to Bible Tracker ✨</p>
+        <p className="text-sm text-gray-600 mt-1">
+          Gereja Aktif: <span className="font-semibold text-blue-600">{churchName}</span>
+        </p>
       </div>
 
       {/* 📊 Stats Section */}
