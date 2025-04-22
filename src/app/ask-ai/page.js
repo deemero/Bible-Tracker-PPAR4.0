@@ -86,6 +86,14 @@ export default function AskAiPage() {
               <strong className="text-green-700">Jawapan AI:</strong><br />
               {answer}
             </div>
+
+            {/* 🔔 Reminder bawah jawapan */}
+            <p className="text-xs text-gray-500 italic mt-3">
+  ⚠️ Saya cuma AI. Jangan harap 100% ya.  
+   Jangan bergantung sepenuhnya — iman datang dari pembacaan, doa, dan persekutuan yang sebenar.
+</p>
+
+
             <button
               onClick={handleCopy}
               className="mt-3 flex items-center gap-1 text-xs text-green-600 hover:text-green-800"
