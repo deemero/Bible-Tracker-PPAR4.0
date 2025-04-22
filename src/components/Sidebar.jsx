@@ -12,7 +12,8 @@ import {
   BarChartBig,
   LogOut,
   Search,
-  X
+  X,
+  BotIcon,
 } from "lucide-react";
 
 import { useState, useEffect } from "react";
@@ -44,6 +45,8 @@ export default function Sidebar({ isOpen = true, toggleSidebar }) {
         { icon: <Users size={20} />, text: "Friend List", href: "/friend-list", color: "indigo" },
         { icon: <UserCheck size={20} />, text: "Add Friend", href: "/find-friend", color: "emerald" },
         { icon: <Inbox size={20} />, text: "Requests", href: "/friend-requests", color: "orange" },
+        { icon: <BotIcon size={20} />, text: "Ask Ai Revival", href: "/ask-ai", color: "blue" },
+
       ];
 
   useEffect(() => {
