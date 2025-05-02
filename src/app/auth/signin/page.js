@@ -43,7 +43,7 @@ export default function SignIn() {
     <div className="flex items-center justify-center h-screen w-screen bg-white">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
         <h1 className="text-2xl font-bold text-center text-green-700 leading-snug">
-          Bible Revivalz 4.0 
+          Bible Revivalz
           <br />
           <span className="text-gray-700 font-medium">Revival Generation </span>
         </h1>

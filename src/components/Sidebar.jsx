@@ -92,7 +92,7 @@ export default function Sidebar({ isOpen = true, toggleSidebar }) {
       >
         {/* Header */}
         <div className="flex justify-between items-center px-4 py-4 border-b">
-          <h1 className="text-lg font-bold text-green-600">Bible Revivalz 4.0V </h1>
+          <h1 className="text-lg font-bold text-green-600">Bible Revivalz </h1>
           <button className="sm:hidden text-gray-700" onClick={toggleSidebar}>
             <X size={20} />
           </button>

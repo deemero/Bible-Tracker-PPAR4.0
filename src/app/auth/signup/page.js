@@ -39,7 +39,7 @@ export default function SignUp() {
     <div className="flex items-center justify-center h-screen w-screen bg-white px-4 sm:px-0">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
       <h1 className="text-2xl font-bold text-center text-green-700 leading-snug">
-  Bible Revivalz 4.0<br />
+  Bible Revivalz<br />
   <span className="text-gray-700 font-medium">Revival Generation </span>
 </h1>
         <p className="text-gray-600 text-center mb-4">Create your account</p>
