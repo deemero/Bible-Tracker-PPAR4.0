@@ -7,7 +7,7 @@ import AutoLogoutProvider from "@/components/AutoLogoutProvider";
 import { icons } from "lucide-react";
 
 export const metadata = {
-  title: "Bible Tracker",
+  title: "Bible Revivalz",
   description: "Reading App",
   icons: {
     icon: '/bpre.png',
