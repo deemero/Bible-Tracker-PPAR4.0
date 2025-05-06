@@ -35,18 +35,78 @@ export default function SettingsPage() {
 
     if (error) {
       alert("❌ Gagal simpan.");
-      console.error(error);
+      console.error("Manual update error:", JSON.stringify(error, null, 2));
     } else {
       alert("✅ Berjaya disimpan.");
     }
   };
 
-  const handleResetProgress = () => {
-    if (confirm("Adakah anda pasti ingin hapus semua progress bacaan?")) {
-      alert("Progress berjaya direset.");
+  const handleResetProgress = async () => {
+    if (!confirm("Adakah anda pasti ingin hapus semua progress bacaan?")) return;
+    if (!userId) {
+      alert("❌ User tidak dijumpai.");
+      return;
     }
+  
+    // 1. Padam semua data baca user
+    const { error: deleteErr } = await supabase
+      .from("reading_progress")
+      .delete()
+      .eq("user_id", userId);
+  
+    if (deleteErr) {
+      alert("❌ Gagal padam progress.");
+      console.error(deleteErr);
+      return;
+    }
+  
+    // 2. Ambil semua chapters dari table 'chapters'
+    const { data: chapters, error: chapterErr } = await supabase
+      .from("chapters")
+      .select("book_name, chapter_number");
+  
+    if (chapterErr || !chapters) {
+      alert("❌ Gagal ambil senarai bab.");
+      console.error(chapterErr);
+      return;
+    }
+  
+    // 3. Filter untuk pastikan tiada duplicate dalam batch
+    const seen = new Set();
+    const uniqueChapters = chapters.filter(c => {
+      const key = `${c.book_name}-${c.chapter_number}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  
+    const newData = uniqueChapters.map(c => ({
+      user_id: userId,
+      book_name: c.book_name,
+      chapter_number: c.chapter_number,
+      is_read: false
+    }));
+  
+    // 4. Insert secara berkumpulan
+    const chunkSize = 300;
+    for (let i = 0; i < newData.length; i += chunkSize) {
+      const chunk = newData.slice(i, i + chunkSize);
+  
+      const { error: insertErr } = await supabase
+        .from("reading_progress")
+        .upsert(chunk, { onConflict: ["user_id", "book_name", "chapter_number"] });
+  
+      if (insertErr) {
+        console.error("❌ Insert error:", insertErr);
+        alert("❌ Gagal reset sebahagian data:\n" + JSON.stringify(insertErr, null, 2));
+        return;
+      }
+    }
+  
+    alert("✅ Semua progress berjaya direset!");
   };
-
+  
+  
   const handleDeleteAccount = () => {
     if (confirm("Adakah anda pasti ingin padam akaun anda secara kekal?")) {
       alert("Akaun anda telah dipadam.");
@@ -63,17 +123,13 @@ export default function SettingsPage() {
         <div className="flex gap-4">
           <button
             onClick={() => setLanguage("ms")}
-            className={`px-4 py-2 rounded-full font-medium text-sm transition border shadow-sm ${
-              language === "ms" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"
-            }`}
+            className={`px-4 py-2 rounded-full font-medium text-sm transition border shadow-sm ${language === "ms" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"}`}
           >
             Bahasa Melayu
           </button>
           <button
             onClick={() => setLanguage("en")}
-            className={`px-4 py-2 rounded-full font-medium text-sm transition border shadow-sm ${
-              language === "en" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"
-            }`}
+            className={`px-4 py-2 rounded-full font-medium text-sm transition border shadow-sm ${language === "en" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"}`}
           >
             English
           </button>
@@ -84,16 +140,8 @@ export default function SettingsPage() {
       <section className="bg-white shadow rounded-xl p-6">
         <h2 className="text-xl font-semibold text-black mb-4">📲 Notifikasi</h2>
         <div className="space-y-3">
-          <ToggleSwitch
-            label="Hantar notifikasi harian untuk baca Alkitab"
-            enabled={dailyReminder}
-            onToggle={() => setDailyReminder(!dailyReminder)}
-          />
-          <ToggleSwitch
-            label="Hantar email peringatan mingguan"
-            enabled={weeklyReminder}
-            onToggle={() => setWeeklyReminder(!weeklyReminder)}
-          />
+          <ToggleSwitch label="Hantar notifikasi harian untuk baca Alkitab" enabled={dailyReminder} onToggle={() => setDailyReminder(!dailyReminder)} />
+          <ToggleSwitch label="Hantar email peringatan mingguan" enabled={weeklyReminder} onToggle={() => setWeeklyReminder(!weeklyReminder)} />
         </div>
       </section>
 
@@ -170,14 +218,10 @@ function ToggleSwitch({ label, enabled, onToggle }) {
       <span className="text-sm text-black font-medium">{label}</span>
       <button
         onClick={onToggle}
-        className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ${
-          enabled ? "bg-green-500" : "bg-gray-300"
-        }`}
+        className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ${enabled ? "bg-green-500" : "bg-gray-300"}`}
       >
         <div
-          className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ${
-            enabled ? "translate-x-6" : "translate-x-0"
-          }`}
+          className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ${enabled ? "translate-x-6" : "translate-x-0"}`}
         />
       </button>
     </div>
