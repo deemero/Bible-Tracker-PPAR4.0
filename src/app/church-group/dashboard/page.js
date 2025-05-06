@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { bibleBooks } from "@/lib/bibleData";
-import { TrendingUp, BarChart2, Flame, CalendarDays, CircleDot } from "lucide-react";
+import { TrendingUp, BarChart2, Flame, CalendarDays, CircleDot, BookOpen } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
 export default function ChurchDashboard() {
@@ -18,6 +18,7 @@ export default function ChurchDashboard() {
   const [recentChapters, setRecentChapters] = useState([]);
   const [ranking, setRanking] = useState(null);
   const [totalUsers, setTotalUsers] = useState(0);
+  const [completionCount, setCompletionCount] = useState(0);
 
   const totalChapters = bibleBooks.flatMap((sec) => sec.books).reduce((sum, book) => sum + book.chapters, 0);
 
@@ -32,6 +33,7 @@ export default function ChurchDashboard() {
       await getProgress(userId);
       await getMonthly(userId);
       await getRecent(userId);
+      await getCompletion(userId);
     };
     load();
   }, []);
@@ -92,45 +94,30 @@ export default function ChurchDashboard() {
     setOverallProgress(sorted[index]?.progress || 0);
   };
 
-  
-
   const getMonthly = async (uid) => {
     const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
-  
-    let allData = [];
-    let start = 0;
-    const limit = 1000;
-    let hasMore = true;
-  
+    let allData = [], start = 0, limit = 1000, hasMore = true;
+
     while (hasMore) {
       const { data, error } = await supabase
         .from("reading_progress")
-        .select("book_name, chapter_number", { count: "exact" }) // ambil minimal field
+        .select("book_name, chapter_number", { count: "exact" })
         .eq("user_id", uid)
         .eq("is_read", true)
         .gte("inserted_at", startOfMonth)
         .range(start, start + limit - 1);
-  
-      if (error) {
-        console.error("Monthly Fetch Error:", error.message);
-        break;
-      }
-  
+
+      if (error) break;
       if (data?.length > 0) {
         allData = [...allData, ...data];
         start += limit;
         hasMore = data.length === limit;
-      } else {
-        hasMore = false;
-      }
+      } else hasMore = false;
     }
-  
-    // Elakkan duplikat (e.g., jika user baca ulang)
+
     const unique = new Set(allData.map(d => `${d.book_name}-${d.chapter_number}`));
     setMonthlyProgress(Math.round((unique.size / totalChapters) * 100));
   };
-
-  
 
   const getRecent = async (uid) => {
     const { data } = await supabase
@@ -144,30 +131,33 @@ export default function ChurchDashboard() {
     setRecentChapters(data || []);
   };
 
+  const getCompletion = async (uid) => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("total_completions")
+      .eq("id", uid)
+      .single();
+    if (data) setCompletionCount(data.total_completions || 0);
+  };
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <Toaster />
       <div className="bg-white p-6 rounded-2xl shadow text-center">
         {avatarUrl ? (
-          <img
-            src={avatarUrl}
-            alt="Avatar"
-            className="w-24 h-24 rounded-full mx-auto mb-4 object-cover"
-          />
-        ) : (
-          <div className="w-24 h-24 rounded-full bg-gray-300 mx-auto mb-4" />
-        )}
+          <img src={avatarUrl} alt="Avatar" className="w-24 h-24 rounded-full mx-auto mb-4 object-cover" />
+        ) : <div className="w-24 h-24 rounded-full bg-gray-300 mx-auto mb-4" />}
+
         <h1 className="text-xl font-bold text-gray-800">Hello {userName}</h1>
         <p className="text-sm text-gray-500">
           <span className="flex items-center justify-center gap-2 mt-1">
             {isOnline && <CircleDot className="text-green-500 w-3 h-3" />} Online
           </span>
-          Anda berada dalam gereja:{" "}
-          <span className="font-semibold text-green-600">{churchName}</span>
+          Anda berada dalam gereja: <span className="font-semibold text-green-600">{churchName}</span>
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 my-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 my-6">
         <StatCard icon={<TrendingUp size={20} />} label="Overall Progress" value={`${overallProgress}%`} />
         <StatCard icon={<CalendarDays size={20} />} label="Monthly Ticked" value={`${monthlyProgress}%`} />
         <StatCard icon={<BarChart2 size={20} />} label="Ranking" value={`#${ranking} of ${totalUsers}`} />
@@ -178,6 +168,7 @@ export default function ChurchDashboard() {
           <p className="text-sm text-gray-600 font-medium">Reading Streak</p>
           <h3 className="text-3xl font-bold text-gray-800">{readingStreak} days</h3>
         </div>
+        <StatCard icon={<BookOpen size={20} />} label="Total Completions" value={`${completionCount}x`} />
       </div>
 
       <div className="bg-green-100 rounded-2xl p-6 mt-6 shadow-inner">

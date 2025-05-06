@@ -1,12 +1,10 @@
-// src/app/reading-progress/page.js
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { bibleBooks } from "@/lib/bibleData";
 import { WahyuAchievementModal, SoundReminderModal } from "@/components/WahyuAchievementModal";
-import { checkAndHandleCompletion } from "@/lib/checkCompletion";
-
+import toast, { Toaster } from "react-hot-toast";
 
 function FancyProgressBar({ value }) {
   const getColor = (val) => {
@@ -34,6 +32,7 @@ export default function ReadingProgressHome() {
   const [waitingForSoundConfirm, setWaitingForSoundConfirm] = useState(false);
   const [modalType, setModalType] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const toastShown = useRef(false);
 
   const allBooks = bibleBooks.flatMap(sec => sec.books);
   const totalChapters = allBooks.reduce((sum, book) => sum + book.chapters, 0);
@@ -58,7 +57,7 @@ export default function ReadingProgressHome() {
     while (hasMore) {
       const { data, error } = await supabase
         .from("reading_progress")
-        .select("book_name, chapter_number, is_read", { count: "exact" })
+        .select("book_name, chapter_number, is_read")
         .eq("user_id", uid)
         .range(start, start + limit - 1);
 
@@ -97,15 +96,28 @@ export default function ReadingProgressHome() {
     const percentage = Math.round((totalRead / totalChapters) * 100);
     setOverallProgress(percentage);
 
-    if (percentage === 100) {
-      const confirm = window.confirm("Anda sudah habis membaca seluruh Alkitab. Adakah anda mahu reset dan tambah rekod pembacaan?");
-      if (confirm) {
-        const done = await checkAndHandleCompletion(uid);
-        if (done) {
-          alert("🎉 Progress dimulakan semula dan rekod disimpan!");
-          await calculateProgress(uid);
-        }
-      }
+    if (percentage === 100 && !toastShown.current) {
+      toastShown.current = true;
+
+      toast.custom((t) => (
+        <div className="bg-white border border-green-500 rounded-xl px-5 py-4 shadow-lg text-sm text-gray-800 flex flex-col items-start gap-2 w-[320px]">
+          <span>🎉 <b>Tahniah! Anda telah selesai membaca seluruh Alkitab.</b></span>
+          <span className="text-gray-600 text-xs">
+            Untuk simpanan peribadi, anda boleh merekodkan berapa kali anda telah selesai membaca Alkitab melalui bahagian <b>Settings</b>.
+            <br /><br />
+            Anda juga boleh reset progress untuk memulakan pembacaan dari awal semula. 📘
+            <br /><br />
+            📖 <i>Ingatlah — membaca Alkitab bukan hanya sekali, tetapi untuk seumur hidup.</i> Hehe 😄💚
+            <br />Teruskan berjalan bersama firman Tuhan!
+          </span>
+          <button
+            className="mt-2 ml-auto text-sm font-medium text-green-600 hover:underline"
+            onClick={() => toast.dismiss(t.id)}
+          >
+            OK
+          </button>
+        </div>
+      ));
     }
   };
 
@@ -148,6 +160,7 @@ export default function ReadingProgressHome() {
 
   return (
     <div className="w-full max-w-5xl mx-auto px-4 py-6">
+      <Toaster />
       <h1 className="text-2xl font-bold text-center mb-2 text-gray-800">
         Bible Reading Progress
       </h1>

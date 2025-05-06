@@ -1,12 +1,45 @@
-
-
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function SettingsPage() {
   const [dailyReminder, setDailyReminder] = useState(false);
   const [weeklyReminder, setWeeklyReminder] = useState(false);
-  const [language, setLanguage] = useState("ms"); // 'ms' for Malay, 'en' for English
+  const [language, setLanguage] = useState("ms");
+  const [manualCount, setManualCount] = useState("");
+  const [userId, setUserId] = useState(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("total_completions")
+          .eq("id", user.id)
+          .single();
+        if (data) setManualCount(data.total_completions || 0);
+      }
+    };
+    fetchUser();
+  }, []);
+
+  const handleManualUpdate = async () => {
+    if (!confirm("Simpan jumlah kali anda sudah khatam Alkitab?")) return;
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({ total_completions: parseInt(manualCount) })
+      .eq("id", userId);
+
+    if (error) {
+      alert("❌ Gagal simpan.");
+      console.error(error);
+    } else {
+      alert("✅ Berjaya disimpan.");
+    }
+  };
 
   const handleResetProgress = () => {
     if (confirm("Adakah anda pasti ingin hapus semua progress bacaan?")) {
@@ -24,7 +57,7 @@ export default function SettingsPage() {
     <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">
       <h1 className="text-3xl font-bold text-center text-black mb-6">⚙️ Settings</h1>
 
-      {/* Language Toggle */}
+      {/* Bahasa */}
       <section className="bg-white shadow rounded-xl p-6">
         <h2 className="text-xl font-semibold text-black mb-4">🌐 Bahasa</h2>
         <div className="flex gap-4">
@@ -64,6 +97,27 @@ export default function SettingsPage() {
         </div>
       </section>
 
+      {/* Manual Completion Entry */}
+      <section className="bg-white shadow rounded-xl p-6">
+        <h2 className="text-xl font-semibold text-black mb-4">📘 Manual Completion Entry</h2>
+        <p className="text-gray-600 mb-4">Sudah berapa kali anda habis baca Alkitab sebelum guna app ini?</p>
+        <div className="flex items-center gap-4">
+          <input
+            type="number"
+            min="0"
+            value={manualCount}
+            onChange={(e) => setManualCount(e.target.value)}
+            className="w-24 px-3 py-2 border rounded-xl"
+          />
+          <button
+            onClick={handleManualUpdate}
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+          >
+            Simpan
+          </button>
+        </div>
+      </section>
+
       {/* Reset Progress */}
       <section className="bg-white shadow rounded-xl p-6">
         <h2 className="text-xl font-semibold text-black mb-4">🧼 Reset Progress</h2>
@@ -88,7 +142,7 @@ export default function SettingsPage() {
         </button>
       </section>
 
-      {/* Info & Versi */}
+      {/* Info App */}
       <section className="bg-white shadow rounded-xl p-6">
         <h2 className="text-xl font-semibold text-black mb-4">📜 Info Aplikasi</h2>
         <p className="text-gray-600 mb-2">
@@ -129,4 +183,3 @@ function ToggleSwitch({ label, enabled, onToggle }) {
     </div>
   );
 }
- 
