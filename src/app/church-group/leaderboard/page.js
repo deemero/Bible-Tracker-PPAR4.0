@@ -10,7 +10,6 @@ export default function ChurchLeaderboardPage() {
   const [monthlyLeaders, setMonthlyLeaders] = useState([]);
   const [streakLeaders, setStreakLeaders] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [churchId, setChurchId] = useState(null);
 
   useEffect(() => {
     const load = async () => {
@@ -24,35 +23,34 @@ export default function ChurchLeaderboardPage() {
         .single();
 
       if (profile?.church_id) {
-        setChurchId(profile.church_id);
         fetchAll(profile.church_id);
       }
     };
     load();
   }, []);
 
-  const fetchAll = async (cid) => {
+  const fetchAll = async (churchId) => {
     const { data: usersInChurch } = await supabase
       .from("profiles")
-      .select("id, username, avatar_url, reading_streak") // ✅ Ambil streak terus dari profiles
-      .eq("church_id", cid);
+      .select("id, username, avatar_url, reading_streak")
+      .eq("church_id", churchId);
 
     const userIds = usersInChurch.map((u) => u.id);
     const userMap = Object.fromEntries(usersInChurch.map(u => [u.id, u]));
 
-    const { data: progressData } = await supabase
-      .from("reading_progress")
-      .select("user_id, is_read")
-      .eq("is_read", true)
+    // ✅ Guna pre-aggregated view
+    const { data: readCounts } = await supabase
+      .from("user_read_progress")
+      .select("user_id, total")
       .in("user_id", userIds);
 
-    const chaptersMap = {};
-    progressData.forEach((row) => {
-      chaptersMap[row.user_id] = (chaptersMap[row.user_id] || 0) + 1;
+    const userReadCount = {};
+    readCounts?.forEach(row => {
+      userReadCount[row.user_id] = row.total;
     });
 
     const finalList = userIds.map((id) => {
-      const chaptersRead = chaptersMap[id] || 0;
+      const chaptersRead = userReadCount[id] || 0;
       return {
         ...userMap[id],
         chapters_read: chaptersRead,
@@ -62,7 +60,7 @@ export default function ChurchLeaderboardPage() {
 
     const sorted = [...finalList].sort((a, b) => b.progress_percentage - a.progress_percentage);
     const top10 = sorted.slice(0, 10);
-    const top5Monthly = sorted.slice(0, 5);
+    const top5Monthly = sorted.slice(0, 5); // Optional logic
     const streakSorted = [...finalList]
       .filter(u => u.reading_streak > 0)
       .sort((a, b) => b.reading_streak - a.reading_streak);
@@ -127,7 +125,15 @@ export default function ChurchLeaderboardPage() {
                 <div className="text-xs text-gray-500 mb-1">{user.chapters_read} Bab dibaca</div>
                 <div className="w-full bg-gray-200 h-2 rounded-full">
                   <div
-                    className={`h-full rounded-full transition-all duration-300 ${user.progress_percentage >= 80 ? "bg-green-500" : user.progress_percentage >= 60 ? "bg-lime-400" : user.progress_percentage >= 30 ? "bg-yellow-300" : "bg-red-400"}`}
+                    className={`h-full rounded-full transition-all duration-300 ${
+                      user.progress_percentage >= 80
+                        ? "bg-green-500"
+                        : user.progress_percentage >= 60
+                        ? "bg-lime-400"
+                        : user.progress_percentage >= 30
+                        ? "bg-yellow-300"
+                        : "bg-red-400"
+                    }`}
                     style={{ width: `${user.progress_percentage}%` }}
                   />
                 </div>
@@ -147,7 +153,9 @@ export default function ChurchLeaderboardPage() {
           key={index}
           className="flex flex-col items-center bg-white text-black rounded-xl p-4 shadow-md hover:scale-105 transition duration-300 ring-2 ring-[#A3C39A] animate-heartbeat-glow"
         >
-          <div className="text-2xl mb-1">{index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`}</div>
+          <div className="text-2xl mb-1">
+            {index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`}
+          </div>
           {user.avatar_url ? (
             <Image
               src={user.avatar_url}
@@ -171,11 +179,17 @@ export default function ChurchLeaderboardPage() {
       <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">Church Leaderboard</h1>
 
       <div className="flex justify-center flex-wrap gap-3 mb-4">
-        {[{ key: "overall", label: "Top 10 Gereja" }, { key: "monthly", label: "Top 5 Bulan Ini" }, { key: "streak", label: "Streak 🔥" }].map(({ key, label }) => (
+        {[
+          { key: "overall", label: "Top 10 Gereja" },
+          { key: "monthly", label: "Top 5 Bulan Ini" },
+          { key: "streak", label: "Streak 🔥" }
+        ].map(({ key, label }) => (
           <button
             key={key}
             onClick={() => setTab(key)}
-            className={`px-4 py-2 rounded-xl font-semibold text-sm shadow transition duration-200 ${tab === key ? "bg-blue-300 text-white shadow-md" : "bg-white text-gray-700 border border-gray-300 hover:bg-blue-100"}`}
+            className={`px-4 py-2 rounded-xl font-semibold text-sm shadow transition duration-200 ${
+              tab === key ? "bg-blue-300 text-white shadow-md" : "bg-white text-gray-700 border border-gray-300 hover:bg-blue-100"
+            }`}
           >
             {label}
           </button>
@@ -192,9 +206,18 @@ export default function ChurchLeaderboardPage() {
         />
       </div>
 
-      {tab === "overall" && renderList(overallLeaders.filter((user) => (user.username || "").toLowerCase().includes(searchTerm.toLowerCase())))}
-      {tab === "monthly" && renderList(monthlyLeaders.filter((user) => (user.username || "").toLowerCase().includes(searchTerm.toLowerCase())))}
-      {tab === "streak" && renderStreakList(streakLeaders.filter((user) => (user.username || "").toLowerCase().includes(searchTerm.toLowerCase())))}
+      {tab === "overall" &&
+        renderList(overallLeaders.filter((user) =>
+          (user.username || "").toLowerCase().includes(searchTerm.toLowerCase())
+        ))}
+      {tab === "monthly" &&
+        renderList(monthlyLeaders.filter((user) =>
+          (user.username || "").toLowerCase().includes(searchTerm.toLowerCase())
+        ))}
+      {tab === "streak" &&
+        renderStreakList(streakLeaders.filter((user) =>
+          (user.username || "").toLowerCase().includes(searchTerm.toLowerCase())
+        ))}
     </div>
   );
 }

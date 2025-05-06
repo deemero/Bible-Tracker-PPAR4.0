@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { bibleBooks } from "@/lib/bibleData";
 import { updateStreak } from "@/lib/streakUtils";
-import { TrendingUp, CalendarCheck, BarChart2, Flame } from "lucide-react";
+import { TrendingUp, CalendarCheck, BarChart2, Flame, BookOpen } from "lucide-react";
 import Confetti from "react-confetti";
 import toast, { Toaster } from "react-hot-toast";
 
@@ -23,6 +23,7 @@ export default function Home() {
   const [readingStreak, setReadingStreak] = useState(0);
   const [prevStreak, setPrevStreak] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [completionCount, setCompletionCount] = useState(0);
 
   const allBooks = bibleBooks.flatMap(sec => sec.books);
   const totalChapters = allBooks.reduce((sum, book) => sum + book.chapters, 0);
@@ -54,6 +55,7 @@ export default function Home() {
     getMonthlyProgress(uid);
     getRanking(uid);
     getRecentReads(uid);
+    getCompletionCount(uid);
     await updateStreak(uid);
     await getReadingStreak(uid);
   };
@@ -70,6 +72,18 @@ export default function Home() {
       setAvatarUrl(data.avatar_url);
       setIsOnline(data.is_online);
       setChurchName(data.churches?.name || "Tiada Gereja");
+    }
+  };
+
+  const getCompletionCount = async (uid) => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("total_completions")
+      .eq("id", uid)
+      .single();
+
+    if (!error && data) {
+      setCompletionCount(data.total_completions || 0);
     }
   };
 
@@ -93,34 +107,80 @@ export default function Home() {
   };
 
   const getOverallProgress = async (uid) => {
-    const { data } = await supabase
-      .from("reading_progress")
-      .select("is_read")
-      .eq("user_id", uid);
-    const readCount = data?.filter(d => d.is_read).length || 0;
-    setOverallProgress(Math.round((readCount / totalChapters) * 100));
+    let allData = [];
+    let start = 0;
+    const limit = 1000;
+    let hasMore = true;
+
+    while (hasMore) {
+      const { data, error } = await supabase
+        .from("reading_progress")
+        .select("book_name, chapter_number, is_read")
+        .eq("user_id", uid)
+        .eq("is_read", true)
+        .range(start, start + limit - 1);
+
+      if (error) break;
+
+      if (data.length > 0) {
+        allData = [...allData, ...data];
+        start += limit;
+        hasMore = data.length === limit;
+      } else {
+        hasMore = false;
+      }
+    }
+
+    const unique = new Set(allData.map(d => `${d.book_name}-${d.chapter_number}`));
+    setOverallProgress(Math.round((unique.size / totalChapters) * 100));
   };
 
   const getMonthlyProgress = async (uid) => {
     const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
-    const { data } = await supabase
-      .from("reading_progress")
-      .select("is_read, inserted_at")
-      .eq("user_id", uid)
-      .eq("is_read", true)
-      .gte("inserted_at", startOfMonth);
-    setMonthlyProgress(Math.round((data?.length || 0) / totalChapters * 100));
+
+    let allData = [];
+    let start = 0;
+    const limit = 1000;
+    let hasMore = true;
+
+    while (hasMore) {
+      const { data, error } = await supabase
+        .from("reading_progress")
+        .select("book_name, chapter_number, is_read, inserted_at")
+        .eq("user_id", uid)
+        .eq("is_read", true)
+        .gte("inserted_at", startOfMonth)
+        .range(start, start + limit - 1);
+
+      if (error) break;
+
+      if (data.length > 0) {
+        allData = [...allData, ...data];
+        start += limit;
+        hasMore = data.length === limit;
+      } else {
+        hasMore = false;
+      }
+    }
+
+    const unique = new Set(allData.map(d => `${d.book_name}-${d.chapter_number}`));
+    setMonthlyProgress(Math.round((unique.size / totalChapters) * 100));
   };
 
   const getRanking = async (uid) => {
     const { data: progressData } = await supabase
       .from("reading_progress")
-      .select("user_id, is_read")
+      .select("user_id, book_name, chapter_number, is_read")
       .eq("is_read", true);
 
     const userProgressMap = {};
+    const seen = new Set();
     progressData?.forEach(row => {
-      userProgressMap[row.user_id] = (userProgressMap[row.user_id] || 0) + 1;
+      const key = `${row.user_id}-${row.book_name}-${row.chapter_number}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        userProgressMap[row.user_id] = (userProgressMap[row.user_id] || 0) + 1;
+      }
     });
 
     const sorted = Object.entries(userProgressMap)
@@ -182,6 +242,7 @@ export default function Home() {
         <StatCard icon={<CalendarCheck size={20} />} label="Monthly Ticked" value={`${monthlyProgress}%`} />
         <StatCard icon={<BarChart2 size={20} />} label="Ranking" value={`#${ranking} of ${totalUsers}`} />
         <StatCard icon={<Flame size={20} />} label="Reading Streak" value={`${readingStreak} days`} glow={readingStreak > 0} />
+        <StatCard icon={<BookOpen size={20} />} label="Total Completions" value={`${completionCount} times`} />
       </div>
 
       <div className="p-6 rounded-2xl shadow-md border border-green-100 mb-6 bg-[#b8e8d1]">

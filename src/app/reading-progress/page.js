@@ -1,9 +1,12 @@
+// src/app/reading-progress/page.js
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { bibleBooks } from "@/lib/bibleData";
 import { WahyuAchievementModal, SoundReminderModal } from "@/components/WahyuAchievementModal";
+import { checkAndHandleCompletion } from "@/lib/checkCompletion";
+
 
 function FancyProgressBar({ value }) {
   const getColor = (val) => {
@@ -91,7 +94,19 @@ export default function ReadingProgressHome() {
     });
 
     setProgressMap(newProgress);
-    setOverallProgress(Math.round((totalRead / totalChapters) * 100));
+    const percentage = Math.round((totalRead / totalChapters) * 100);
+    setOverallProgress(percentage);
+
+    if (percentage === 100) {
+      const confirm = window.confirm("Anda sudah habis membaca seluruh Alkitab. Adakah anda mahu reset dan tambah rekod pembacaan?");
+      if (confirm) {
+        const done = await checkAndHandleCompletion(uid);
+        if (done) {
+          alert("🎉 Progress dimulakan semula dan rekod disimpan!");
+          await calculateProgress(uid);
+        }
+      }
+    }
   };
 
   useEffect(() => {
@@ -129,7 +144,7 @@ export default function ReadingProgressHome() {
     if (currentYohanesProgress < 100 && localStorage.getItem("yohanes_love_done")) {
       localStorage.removeItem("yohanes_love_done");
     }
-  }, [progressMap["Wahyu"], progressMap["Maleakhi"], progressMap["Yohanes"]]);
+  }, [progressMap]);
 
   return (
     <div className="w-full max-w-5xl mx-auto px-4 py-6">
@@ -140,11 +155,10 @@ export default function ReadingProgressHome() {
       <p className="text-center text-sm text-gray-700 mb-1">
         Progress Whole Bible: {overallProgress}%
       </p>
-      <div className="mb-6">
+      <div className="mb-4">
         <FancyProgressBar value={overallProgress} />
       </div>
 
-      {/* Search Bar */}
       <div className="flex justify-center mb-8">
         <input
           type="text"

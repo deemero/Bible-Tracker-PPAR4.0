@@ -9,72 +9,72 @@ export default function ChurchPlayerListPage() {
   const session = useSession();
   const [players, setPlayers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [churchId, setChurchId] = useState(null);
 
   useEffect(() => {
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // ✅ Step 1: Semak profile user
+      // Step 1: Ambil profil user
       const { data: profile } = await supabase
         .from("profiles")
         .select("church_id, email, username")
         .eq("id", user.id)
         .single();
 
-      // ✅ Step 2: Jika tiada email, auto update
+      // Step 2: Sync email jika tiada
       if (!profile?.email) {
         const defaultUsername = profile?.username ?? user.user_metadata?.username ?? "Tanpa Nama";
-
         const { error } = await supabase.from("profiles").upsert({
           id: user.id,
           email: user.email,
           username: defaultUsername,
         });
-
         if (error) console.error("❌ Gagal sync email:", error.message);
         else console.log("✅ Email synced to profiles");
       }
 
-      // ✅ Step 3: Set churchId & load player
+      // Step 3: Jika ada church_id, fetch player
       if (profile?.church_id) {
-        setChurchId(profile.church_id);
         fetchPlayers(profile.church_id);
       }
     };
+
     load();
   }, []);
 
-  const fetchPlayers = async (cid) => {
-    const { data, error } = await supabase
+  const fetchPlayers = async (churchId) => {
+    const { data: profileList } = await supabase
       .from("profiles")
       .select("id, username, avatar_url, is_online, reading_streak, email")
-      .eq("church_id", cid);
+      .eq("church_id", churchId);
 
-    if (!error && data) {
-      const progressData = await supabase
-        .from("reading_progress")
-        .select("user_id, is_read")
-        .eq("is_read", true);
+    if (!profileList || profileList.length === 0) return;
 
-      const chaptersReadMap = {};
-      progressData.data.forEach(row => {
-        chaptersReadMap[row.user_id] = (chaptersReadMap[row.user_id] || 0) + 1;
-      });
+    const userIds = profileList.map(u => u.id);
 
-      const updatedPlayers = data.map(user => {
-        const readCount = chaptersReadMap[user.id] || 0;
-        return {
-          ...user,
-          chapters_read: readCount,
-          progress_percentage: Math.round((readCount * 100) / 1189),
-        };
-      });
+    // ✅ Guna view user_read_progress untuk accurate sync
+    const { data: readCounts } = await supabase
+      .from("user_read_progress")
+      .select("user_id, total")
+      .in("user_id", userIds);
 
-      const sorted = updatedPlayers.sort((a, b) => b.progress_percentage - a.progress_percentage);
-      setPlayers(sorted);
-    }
+    const userReadCount = {};
+    readCounts?.forEach(row => {
+      userReadCount[row.user_id] = row.total;
+    });
+
+    const playersWithProgress = profileList.map(user => {
+      const readCount = userReadCount[user.id] || 0;
+      return {
+        ...user,
+        chapters_read: readCount,
+        progress_percentage: Math.round((readCount * 100) / 1189),
+      };
+    });
+
+    const sorted = playersWithProgress.sort((a, b) => b.progress_percentage - a.progress_percentage);
+    setPlayers(sorted);
   };
 
   const handleSearch = () => {

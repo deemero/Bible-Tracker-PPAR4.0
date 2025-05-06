@@ -12,9 +12,12 @@ export default function FriendListPage() {
 
   useEffect(() => {
     const fetchFriends = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Sync email jika tiada
       const { data: profile } = await supabase
         .from("profiles")
         .select("email, username")
@@ -22,45 +25,52 @@ export default function FriendListPage() {
         .single();
 
       if (!profile?.email) {
-        const defaultUsername = profile?.username ?? user.user_metadata?.username ?? "Tanpa Nama";
-
+        const defaultUsername =
+          profile?.username ?? user.user_metadata?.username ?? "Tanpa Nama";
         const { error } = await supabase.from("profiles").upsert({
           id: user.id,
           email: user.email,
           username: defaultUsername,
         });
-
         if (error) console.error("❌ Gagal sync email:", error.message);
         else console.log("✅ Email synced to profiles");
       }
 
+      // Ambil semua kawan
       const { data: friendsData } = await supabase
         .from("friends")
         .select("sender_id, receiver_id")
         .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
         .eq("status", "accepted");
 
-      const friendIds = friendsData.map(f => f.sender_id === user.id ? f.receiver_id : f.sender_id);
+      const friendIds = friendsData.map((f) =>
+        f.sender_id === user.id ? f.receiver_id : f.sender_id
+      );
 
-      if (friendIds.length === 0) return setFriends([]);
+      const allUserIds = [...new Set([...friendIds, user.id])];
+      if (allUserIds.length === 0) return setFriends([]);
 
+      // Ambil profil
       const { data: profilesData } = await supabase
         .from("profiles")
         .select("id, username, avatar_url, is_online, reading_streak, email")
-        .in("id", friendIds);
+        .in("id", allUserIds);
 
-      const { data: progressData } = await supabase
-        .from("reading_progress")
-        .select("user_id, is_read")
-        .eq("is_read", true);
+      // Ambil kiraan progress dari VIEW
+      const { data: readCounts } = await supabase
+        .from("user_read_progress")
+        .select("user_id, total")
+        .in("user_id", allUserIds);
 
-      const chaptersReadMap = {};
-      progressData.forEach(row => {
-        chaptersReadMap[row.user_id] = (chaptersReadMap[row.user_id] || 0) + 1;
+      // Peta user_id → total chapter dibaca
+      const userReadCount = {};
+      readCounts?.forEach((row) => {
+        userReadCount[row.user_id] = row.total;
       });
 
-      const combined = profilesData.map(user => {
-        const readCount = chaptersReadMap[user.id] || 0;
+      // Gabung data profil + progress
+      const combined = profilesData.map((user) => {
+        const readCount = userReadCount[user.id] || 0;
         return {
           ...user,
           chapters_read: readCount,
@@ -68,7 +78,10 @@ export default function FriendListPage() {
         };
       });
 
-      setFriends(combined.sort((a, b) => b.progress_percentage - a.progress_percentage));
+      // Susun ikut progress tertinggi
+      setFriends(
+        combined.sort((a, b) => b.progress_percentage - a.progress_percentage)
+      );
     };
 
     fetchFriends();
@@ -83,7 +96,9 @@ export default function FriendListPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6">
-      <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">Senarai Kawan 📖</h1>
+      <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">
+        Senarai Kawan 📖
+      </h1>
 
       <div className="mb-4 flex justify-center gap-4">
         <input
@@ -107,10 +122,16 @@ export default function FriendListPage() {
             key={user.id}
             className="flex items-center gap-4 p-3 rounded-lg bg-white text-black shadow hover:shadow-md transition"
           >
-            <div className="text-lg font-bold w-6 text-gray-600">{index + 1}</div>
+            <div className="text-lg font-bold w-6 text-gray-600">
+              {index + 1}
+            </div>
 
             <Image
-              src={user.avatar_url?.startsWith("http") ? user.avatar_url : `https://api.dicebear.com/6.x/thumbs/svg?seed=${user.username}`}
+              src={
+                user.avatar_url?.startsWith("http")
+                  ? user.avatar_url
+                  : `https://api.dicebear.com/6.x/thumbs/svg?seed=${user.username}`
+              }
               alt="Avatar"
               width={40}
               height={40}
@@ -145,7 +166,9 @@ export default function FriendListPage() {
               </div>
             </div>
 
-            <div className="text-sm font-bold">{user.progress_percentage}%</div>
+            <div className="text-sm font-bold">
+              {user.progress_percentage}%
+            </div>
 
             {user.id !== session?.user?.id && (
               <div className="ml-2">
@@ -159,7 +182,9 @@ export default function FriendListPage() {
                     Poke
                   </a>
                 ) : (
-                  <span className="text-xs text-gray-400 italic">Tiada email</span>
+                  <span className="text-xs text-gray-400 italic">
+                    Tiada email
+                  </span>
                 )}
               </div>
             )}

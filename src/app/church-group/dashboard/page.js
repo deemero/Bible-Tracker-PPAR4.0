@@ -19,8 +19,7 @@ export default function ChurchDashboard() {
   const [ranking, setRanking] = useState(null);
   const [totalUsers, setTotalUsers] = useState(0);
 
-  const allBooks = bibleBooks.flatMap((sec) => sec.books);
-  const totalChapters = allBooks.reduce((sum, book) => sum + book.chapters, 0);
+  const totalChapters = bibleBooks.flatMap((sec) => sec.books).reduce((sum, book) => sum + book.chapters, 0);
 
   useEffect(() => {
     const load = async () => {
@@ -70,20 +69,20 @@ export default function ChurchDashboard() {
   };
 
   const getProgress = async (uid) => {
-    const { data: all } = await supabase
-      .from("reading_progress")
-      .select("user_id, is_read")
-      .eq("is_read", true);
+    const { data: readCounts } = await supabase
+      .from("user_read_progress")
+      .select("user_id, total")
+      .limit(2000);
 
-    const userProgress = {};
-    all.forEach((row) => {
-      userProgress[row.user_id] = (userProgress[row.user_id] || 0) + 1;
+    const userMap = {};
+    readCounts?.forEach((row) => {
+      userMap[row.user_id] = row.total;
     });
 
-    const sorted = Object.entries(userProgress)
-      .map(([id, chapters]) => ({
+    const sorted = Object.entries(userMap)
+      .map(([id, total]) => ({
         id,
-        progress: Math.round((chapters / totalChapters) * 100),
+        progress: Math.round((total / totalChapters) * 100),
       }))
       .sort((a, b) => b.progress - a.progress);
 
@@ -93,16 +92,45 @@ export default function ChurchDashboard() {
     setOverallProgress(sorted[index]?.progress || 0);
   };
 
+  
+
   const getMonthly = async (uid) => {
     const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
-    const { data } = await supabase
-      .from("reading_progress")
-      .select("id")
-      .eq("user_id", uid)
-      .eq("is_read", true)
-      .gte("inserted_at", startOfMonth);
-    setMonthlyProgress(Math.round((data.length / totalChapters) * 100));
+  
+    let allData = [];
+    let start = 0;
+    const limit = 1000;
+    let hasMore = true;
+  
+    while (hasMore) {
+      const { data, error } = await supabase
+        .from("reading_progress")
+        .select("book_name, chapter_number", { count: "exact" }) // ambil minimal field
+        .eq("user_id", uid)
+        .eq("is_read", true)
+        .gte("inserted_at", startOfMonth)
+        .range(start, start + limit - 1);
+  
+      if (error) {
+        console.error("Monthly Fetch Error:", error.message);
+        break;
+      }
+  
+      if (data?.length > 0) {
+        allData = [...allData, ...data];
+        start += limit;
+        hasMore = data.length === limit;
+      } else {
+        hasMore = false;
+      }
+    }
+  
+    // Elakkan duplikat (e.g., jika user baca ulang)
+    const unique = new Set(allData.map(d => `${d.book_name}-${d.chapter_number}`));
+    setMonthlyProgress(Math.round((unique.size / totalChapters) * 100));
   };
+
+  
 
   const getRecent = async (uid) => {
     const { data } = await supabase
@@ -112,6 +140,7 @@ export default function ChurchDashboard() {
       .eq("is_read", true)
       .order("inserted_at", { ascending: false })
       .limit(5);
+
     setRecentChapters(data || []);
   };
 
@@ -142,33 +171,26 @@ export default function ChurchDashboard() {
         <StatCard icon={<TrendingUp size={20} />} label="Overall Progress" value={`${overallProgress}%`} />
         <StatCard icon={<CalendarDays size={20} />} label="Monthly Ticked" value={`${monthlyProgress}%`} />
         <StatCard icon={<BarChart2 size={20} />} label="Ranking" value={`#${ranking} of ${totalUsers}`} />
-   <div className="p-5 border-2 border-orange-400 rounded-2xl shadow-sm text-center animate-pulse bg-white">
-  <div className="flex justify-center text-orange-500 text-3xl mb-2 animate-bounce">
-    <Flame />
-  </div>
-  <p className="text-sm text-gray-600 font-medium">Reading Streak</p>
-  <h3 className="text-3xl font-bold text-gray-800">{readingStreak} days</h3>
-</div>
+        <div className="p-5 border-2 border-orange-400 rounded-2xl shadow-sm text-center animate-pulse bg-white">
+          <div className="flex justify-center text-orange-500 text-3xl mb-2 animate-bounce">
+            <Flame />
+          </div>
+          <p className="text-sm text-gray-600 font-medium">Reading Streak</p>
+          <h3 className="text-3xl font-bold text-gray-800">{readingStreak} days</h3>
+        </div>
+      </div>
 
-
-   </div>
-
-   <div className="bg-green-100 rounded-2xl p-6 mt-6 shadow-inner">
-  <h2 className="text-lg font-semibold text-white drop-shadow-lg mb-4">Recent Chapters</h2>
-  <ul className="text-white text-sm space-y-2 drop-shadow-lg">
-    {recentChapters.map((item, idx) => (
-      <li key={idx} className="flex justify-between">
-        <span className="text-white drop-shadow-lg">
-          {item.book_name} {item.chapter_number}
-        </span>
-        <span className="text-xs text-white drop-shadow-lg">
-          {new Date(item.inserted_at).toLocaleString()}
-        </span>
-      </li>
-    ))}
-  </ul>
-</div>
-
+      <div className="bg-green-100 rounded-2xl p-6 mt-6 shadow-inner">
+        <h2 className="text-lg font-semibold text-white drop-shadow-lg mb-4">Recent Chapters</h2>
+        <ul className="text-white text-sm space-y-2 drop-shadow-lg">
+          {recentChapters.map((item, idx) => (
+            <li key={idx} className="flex justify-between">
+              <span>{item.book_name} {item.chapter_number}</span>
+              <span className="text-xs">{new Date(item.inserted_at).toLocaleString()}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
