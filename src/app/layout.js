@@ -1,10 +1,9 @@
-// ✅ app/layout.js
+// ✅ app/layout.js (BETUL)
 import "../globals.css";
 import ClientLayout from "@/components/ClientLayout";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Toaster } from "react-hot-toast";
 import AutoLogoutProvider from "@/components/AutoLogoutProvider";
-import { icons } from "lucide-react";
 
 export const metadata = {
   title: "Bible Revivalz",
@@ -24,7 +23,7 @@ export default function RootLayout({ children }) {
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <link rel="bprp.png" sizes="180x180" href="/bpr-180.png" />
       </head>
-      <body className="bg-white text-gray-900 h-full"> {/* ✅ Back to white/light for Global */}
+      <body className="bg-white text-gray-900 h-full">
         <AutoLogoutProvider>
           <Toaster position="top-center" reverseOrder={false} />
           <ClientLayout>{children}</ClientLayout>

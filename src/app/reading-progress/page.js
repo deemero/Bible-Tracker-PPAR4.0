@@ -5,6 +5,10 @@ import { supabase } from "@/lib/supabaseClient";
 import { bibleBooks } from "@/lib/bibleData";
 import { WahyuAchievementModal, SoundReminderModal } from "@/components/WahyuAchievementModal";
 import toast, { Toaster } from "react-hot-toast";
+import { useLanguage } from "@/context/LanguageProvider";
+import useTranslation from "@/hooks/useTranslation"; // ✅ Betul
+
+
 
 function FancyProgressBar({ value }) {
   const getColor = (val) => {
@@ -34,12 +38,19 @@ export default function ReadingProgressHome() {
   const [searchTerm, setSearchTerm] = useState("");
   const toastShown = useRef(false);
 
-  const allBooks = bibleBooks.flatMap(sec => sec.books);
+  const { language } = useLanguage();
+  const { t } = useTranslation();
+  const bookNames = t("books");
+  const isMalay = language === "ms";
+
+  const allBooks = bibleBooks.flatMap((sec) => sec.books);
   const totalChapters = allBooks.reduce((sum, book) => sum + book.chapters, 0);
 
   useEffect(() => {
     const fetchUserAndProgress = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (user) {
         setUserId(user.id);
         await calculateProgress(user.id);
@@ -87,7 +98,7 @@ export default function ReadingProgressHome() {
     }
 
     const newProgress = {};
-    allBooks.forEach(book => {
+    allBooks.forEach((book) => {
       const readCount = grouped[book.name]?.length || 0;
       newProgress[book.name] = Math.round((readCount / book.chapters) * 100);
     });
@@ -101,12 +112,16 @@ export default function ReadingProgressHome() {
 
       toast.custom((t) => (
         <div className="bg-white border border-green-500 rounded-xl px-5 py-4 shadow-lg text-sm text-gray-800 flex flex-col items-start gap-2 w-[320px]">
-          <span>🎉 <b>Tahniah! Anda telah selesai membaca seluruh Alkitab.</b></span>
+          <span>
+            🎉 <b>Tahniah! Anda telah selesai membaca seluruh Alkitab.</b>
+          </span>
           <span className="text-gray-600 text-xs">
             Untuk simpanan peribadi, anda boleh merekodkan berapa kali anda telah selesai membaca Alkitab melalui bahagian <b>Settings</b>.
-            <br /><br />
+            <br />
+            <br />
             Anda juga boleh reset progress untuk memulakan pembacaan dari awal semula. 📘
-            <br /><br />
+            <br />
+            <br />
             📖 <i>Ingatlah — membaca Alkitab bukan hanya sekali, tetapi untuk seumur hidup.</i> Hehe 😄💚
             <br />Teruskan berjalan bersama firman Tuhan!
           </span>
@@ -162,11 +177,12 @@ export default function ReadingProgressHome() {
     <div className="w-full max-w-5xl mx-auto px-4 py-6">
       <Toaster />
       <h1 className="text-2xl font-bold text-center mb-2 text-gray-800">
-        Bible Reading Progress
+        {isMalay ? "Kemajuan Bacaan Alkitab" : "Bible Reading Progress"}
       </h1>
 
       <p className="text-center text-sm text-gray-700 mb-1">
-        Progress Whole Bible: {overallProgress}%
+        {isMalay ? "Kemajuan Keseluruhan: " : "Progress Whole Bible: "}
+        {overallProgress}%
       </p>
       <div className="mb-4">
         <FancyProgressBar value={overallProgress} />
@@ -175,20 +191,29 @@ export default function ReadingProgressHome() {
       <div className="flex justify-center mb-8">
         <input
           type="text"
-          placeholder="Cari nama buku..."
+          placeholder={isMalay ? "Cari nama kitab..." : "Search book name..."}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full sm:w-80 px-5 py-3 rounded-xl border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-green-300 bg-white text-black placeholder-gray-500"
         />
       </div>
 
-      {bibleBooks.map(section => (
+      {bibleBooks.map((section, secIndex) => (
         <div key={section.section} className="mb-8">
-          <h2 className="text-xl text-gray-800 font-semibold mb-2">{section.section}</h2>
+          <h2 className="text-xl text-gray-800 font-semibold mb-2">
+  {secIndex === 0 ? t("oldTestament") : t("newTestament")}
+</h2>
+
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {section.books
-              .filter(book => book.name.toLowerCase().includes(searchTerm.toLowerCase()))
-              .map(book => {
+              .map((book, i) => ({
+                ...book,
+                translatedName: bookNames[i + (secIndex === 1 ? 39 : 0)],
+              }))
+              .filter((book) =>
+                book.translatedName.toLowerCase().includes(searchTerm.toLowerCase())
+              )
+              .map((book) => {
                 const slug = book.name.toLowerCase().replace(/\s+/g, "-");
                 const progress = progressMap[book.name] || 0;
 
@@ -198,7 +223,7 @@ export default function ReadingProgressHome() {
                     href={`/reading-progress/${slug}`}
                     className="p-4 rounded-2xl border border-gray-200 bg-white hover:bg-green-200 hover:text-gray-900 transition text-sm text-gray-800 shadow-sm"
                   >
-                    <div className="font-semibold mb-1">{book.name}</div>
+                    <div className="font-semibold mb-1">{book.translatedName}</div>
                     <div className="text-xs text-gray-500 mb-1">
                       Progress: {progress}%
                     </div>
