@@ -1,7 +1,8 @@
+
 "use client";
 import { useState } from "react";
 import useTranslation from "@/hooks/useTranslation";
-
+import { motion } from "framer-motion";
 
 export default function OthersPage() {
   const [question, setQuestion] = useState("");
@@ -33,22 +34,51 @@ export default function OthersPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">
-      <h1 className="text-3xl font-bold text-center text-black mb-6">{t("others.title")}</h1>
+    <motion.div
+      className="max-w-3xl mx-auto px-4 py-8 space-y-8"
+      initial={{ opacity: 0, y: 40 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+    >
+      <motion.h1
+        className="text-3xl font-bold text-center text-green-700 mb-6"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        {t("others.title")}
+      </motion.h1>
 
-      <section className="bg-white shadow rounded-xl p-6">
+      {/* About Section */}
+      <motion.section
+        className="bg-white shadow rounded-2xl p-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.1 }}
+      >
         <h2 className="text-xl font-semibold text-gray-800 mb-2">{t("others.aboutTitle")}</h2>
         <p className="text-sm text-gray-700 leading-relaxed">{t("others.aboutDesc1")}</p>
         <p className="text-sm text-gray-700 mt-3 leading-relaxed">{t("others.aboutDesc2")}</p>
         <p className="text-sm text-gray-700 mt-3 leading-relaxed">{t("others.aboutDesc3")}</p>
-      </section>
+      </motion.section>
 
-      <section className="bg-white shadow rounded-xl p-6">
+      {/* Schedule Section */}
+      <motion.section
+        className="bg-white shadow rounded-2xl p-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2 }}
+      >
         <h2 className="text-xl font-semibold text-black mb-2">{t("others.scheduleTitle")}</h2>
         <p className="text-gray-700 text-sm">{t("others.scheduleInfo")}</p>
-      </section>
+      </motion.section>
 
-      <section className="bg-white shadow rounded-xl p-6">
+      {/* Teacher Section */}
+      <motion.section
+        className="bg-white shadow rounded-2xl p-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.3 }}
+      >
         <h2 className="text-xl font-semibold text-black mb-4">{t("others.teacherTitle")}</h2>
         <div className="flex flex-col sm:flex-row gap-4">
           <img
@@ -61,10 +91,16 @@ export default function OthersPage() {
             <p className="text-sm text-gray-700 mt-2">{t("others.teacherDesc")}</p>
           </div>
         </div>
-      </section>
+      </motion.section>
 
-      <section className="bg-[#b8e8d1] border border-green-100 shadow-md rounded-2xl p-6">
-        <h2 className="text-xl font-semibold text-white mb-4 text-shadow">{t("others.questionTitle")}</h2>
+      {/* Question Section */}
+      <motion.section
+        className="bg-[#b8e8d1] border border-green-100 shadow-md rounded-2xl p-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.4 }}
+      >
+        <h2 className="text-xl font-semibold text-white mb-4 drop-shadow">{t("others.questionTitle")}</h2>
         <form onSubmit={handleSubmit}>
           <textarea
             rows="4"
@@ -93,28 +129,31 @@ export default function OthersPage() {
             )}
           </button>
           {submitted && (
-            <p className="text-white text-sm mt-3 text-shadow">{t("others.submittedMsg")}</p>
+            <p className="text-white text-sm mt-3 drop-shadow">{t("others.submittedMsg")}</p>
           )}
         </form>
-      </section>
+      </motion.section>
 
-      <section className="bg-white rounded-xl shadow p-6 text-center">
-  <h2 className="text-lg font-semibold text-gray-800 mb-4">{t("others.supportTitle")}</h2>
-
-  <p className="text-sm text-gray-700 italic leading-relaxed mb-4">
-    {t("others.supportDesc")}
-  </p>
-
-  <a
-    href="https://altar-give.vercel.app/"
-    target="_blank"
-    rel="noopener noreferrer"
-    className="inline-block px-5 py-2 bg-green-600 text-white text-sm font-medium rounded-full hover:bg-green-700 transition"
-  >
-   Click Here to support
-  </a>
-</section>
-
-    </div>
+      {/* Support Section */}
+      <motion.section
+        className="bg-white rounded-2xl shadow p-6 text-center"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+      >
+        <h2 className="text-lg font-semibold text-gray-800 mb-4">{t("others.supportTitle")}</h2>
+        <p className="text-sm text-gray-700 italic leading-relaxed mb-4">
+          {t("others.supportDesc")}
+        </p>
+        <a
+          href="https://altar-give.vercel.app/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block px-5 py-2 bg-green-600 text-white text-sm font-medium rounded-full hover:bg-green-700 transition"
+        >
+          Click Here to support
+        </a>
+      </motion.section>
+    </motion.div>
   );
 }

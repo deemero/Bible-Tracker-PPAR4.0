@@ -19,6 +19,8 @@ import {
 import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { RefreshCw } from "lucide-react"; // atau Compass, Sliders, Brain
+
 
 export default function Sidebar({ isOpen = true, toggleSidebar }) {
   const [user, setUser] = useState(null);
@@ -35,6 +37,8 @@ export default function Sidebar({ isOpen = true, toggleSidebar }) {
         { icon: <Settings size={20} />, text: "Settings", href: "/church-group/settings", color: "green" },
         { icon: <Info size={20} />, text: "Others", href: "/church-group/others", color: "green" },
         { icon: <Users size={20} />, text: "Church Playerlist", href: "/church-group/playerlist", color: "green" },
+        { icon: <RefreshCw size={20} />, text: "Switch Mode", href: "/select-mode", color: "blue" },
+
       ]
     : [
         { icon: <Home size={20} />, text: "Home", href: "/dashboard", color: "blue" },
@@ -46,6 +50,8 @@ export default function Sidebar({ isOpen = true, toggleSidebar }) {
         { icon: <UserCheck size={20} />, text: "Add Friend", href: "/find-friend", color: "emerald" },
         { icon: <Inbox size={20} />, text: "Requests", href: "/friend-requests", color: "orange" },
         { icon: <BotIcon size={20} />, text: "Ask Ai Revival", href: "/ask-ai", color: "blue" },
+        { icon: <RefreshCw size={20} />, text: "Switch Mode", href: "/select-mode", color: "blue" },
+
 
       ];
 

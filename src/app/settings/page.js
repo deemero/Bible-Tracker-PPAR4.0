@@ -1,10 +1,10 @@
+
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import useTranslation from "@/hooks/useTranslation";
 import { useLanguage } from "@/context/LanguageProvider";
 import { toast } from "react-hot-toast";
-
 
 export default function SettingsPage() {
   const [dailyReminder, setDailyReminder] = useState(false);
@@ -30,17 +30,10 @@ export default function SettingsPage() {
     fetchUser();
   }, []);
 
-
-
-//junmlah
-
-const handleManualUpdate = async () => {
-  toast(
-    (t) => (
+  const handleManualUpdate = async () => {
+    toast((t) => (
       <div className="space-y-2">
-        <p className="text-sm font-medium text-gray-800">
-           Are you sure you've read this much??
-        </p>
+        <p className="text-sm font-medium text-gray-800">Are you sure you've read this much?</p>
         <div className="flex gap-2">
           <button
             onClick={async () => {
@@ -52,19 +45,11 @@ const handleManualUpdate = async () => {
 
               if (error) {
                 toast.error("❌ Failed. Try Again!", {
-                  style: {
-                    borderRadius: "12px",
-                    background: "#ffe6e6",
-                    color: "#b91c1c",
-                  },
+                  style: { borderRadius: "12px", background: "#ffe6e6", color: "#b91c1c" },
                 });
               } else {
-                toast.success("✅ Done! Keep Going  ✨", {
-                  style: {
-                    borderRadius: "12px",
-                    background: "#ecfdf5",
-                    color: "#065f46",
-                  },
+                toast.success("✅ Done! Keep Going ✨", {
+                  style: { borderRadius: "12px", background: "#ecfdf5", color: "#065f46" },
                 });
               }
             }}
@@ -80,147 +65,103 @@ const handleManualUpdate = async () => {
           </button>
         </div>
       </div>
-    ),
-    { duration: 10000 }
-  );
-};
-
-
-
-const handleResetProgress = async () => {
-  const confirmReset = await new Promise((resolve) => {
-    toast((t) => (
-      <div className="space-y-2 text-sm">
-        <p>⚠️ Are you sure you want to reset your reading progress?</p>
-        <div className="flex gap-2">
-          <button
-            onClick={() => {
-              toast.dismiss(t.id);
-              resolve(true);
-            }}
-            className="px-3 py-1 rounded bg-red-600 text-white hover:bg-red-700"
-          >
-            Yes, Reset
-          </button>
-          <button
-            onClick={() => {
-              toast.dismiss(t.id);
-              resolve(false);
-            }}
-            className="px-3 py-1 rounded bg-gray-300 text-gray-800 hover:bg-gray-400"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
     ), { duration: 10000 });
-  });
+  };
 
+  const handleResetProgress = async () => {
+    const confirmReset = await new Promise((resolve) => {
+      toast((t) => (
+        <div className="space-y-2 text-sm">
+          <p>⚠️ Are you sure you want to reset your reading progress?</p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                toast.dismiss(t.id);
+                resolve(true);
+              }}
+              className="px-3 py-1 rounded bg-red-600 text-white hover:bg-red-700"
+            >
+              Yes, Reset
+            </button>
+            <button
+              onClick={() => {
+                toast.dismiss(t.id);
+                resolve(false);
+              }}
+              className="px-3 py-1 rounded bg-gray-300 text-gray-800 hover:bg-gray-400"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ), { duration: 10000 });
+    });
 
-  if (!confirmReset) return;
-
-  if (!userId) {
-    toast.error("❌ User not found.");
-    return;
-  }
-
-  const { error: deleteErr } = await supabase
-    .from("reading_progress")
-    .delete()
-    .eq("user_id", userId);
-
-  if (deleteErr) {
-    toast.error("❌ Failed to delete progress.");
-    console.error(deleteErr);
-    return;
-  }
-
-  const { data: chapters, error: chapterErr } = await supabase
-    .from("chapters")
-    .select("book_name, chapter_number");
-
-  if (chapterErr || !chapters) {
-    toast.error("❌ Failed to fetch chapters.");
-    console.error(chapterErr);
-    return;
-  }
-
-  const seen = new Set();
-  const uniqueChapters = chapters.filter(c => {
-    const key = `${c.book_name}-${c.chapter_number}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-
-  const newData = uniqueChapters.map(c => ({
-    user_id: userId,
-    book_name: c.book_name,
-    chapter_number: c.chapter_number,
-    is_read: false
-  }));
-
-  const chunkSize = 300;
-  for (let i = 0; i < newData.length; i += chunkSize) {
-    const chunk = newData.slice(i, i + chunkSize);
-
-    const { error: insertErr } = await supabase
-      .from("reading_progress")
-      .upsert(chunk, { onConflict: ["user_id", "book_name", "chapter_number"] });
-
-    if (insertErr) {
-      console.error("❌ Insert error:", insertErr);
-      toast.error("❌ Failed to reset some data.");
+    if (!confirmReset || !userId) {
+      toast.error("❌ Operation canceled or user not found.");
       return;
     }
-  }
 
-  toast.success("✅ All progress has been reset. Start fresh!");
-};
+    const { error: deleteErr } = await supabase
+      .from("reading_progress")
+      .delete()
+      .eq("user_id", userId);
+    if (deleteErr) return toast.error("❌ Failed to delete progress.");
 
-const handleDeleteAccount = () => {
-  const confirmDelete = window.confirm("⚠️ Are you sure you want to delete your account permanently?");
-  if (confirmDelete) {
-    toast("🗑️ Account deletion is under development.");
-  }
-};
+    const { data: chapters, error: chapterErr } = await supabase
+      .from("chapters")
+      .select("book_name, chapter_number");
+    if (chapterErr || !chapters) return toast.error("❌ Failed to fetch chapters.");
+
+    const seen = new Set();
+    const uniqueChapters = chapters.filter(c => {
+      const key = `${c.book_name}-${c.chapter_number}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    const newData = uniqueChapters.map(c => ({
+      user_id: userId,
+      book_name: c.book_name,
+      chapter_number: c.chapter_number,
+      is_read: false
+    }));
+
+    for (let i = 0; i < newData.length; i += 300) {
+      const chunk = newData.slice(i, i + 300);
+      const { error: insertErr } = await supabase
+        .from("reading_progress")
+        .upsert(chunk, { onConflict: ["user_id", "book_name", "chapter_number"] });
+      if (insertErr) return toast.error("❌ Failed to reset some data.");
+    }
+
+    toast.success("✅ All progress has been reset. Start fresh!");
+  };
+
+  const handleDeleteAccount = () => {
+    const confirmDelete = window.confirm("⚠️ Are you sure you want to delete your account permanently?");
+    if (confirmDelete) toast("🗑️ Account deletion is under development.");
+  };
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">
-      <h1 className="text-3xl font-bold text-center text-black mb-6">⚙️ {t("settings")}</h1>
+      <h1 className="text-3xl font-bold text-center text-green-700 mb-6">⚙️ {t("settings")}</h1>
 
-      {/* Bahasa */}
-      <section className="bg-white shadow rounded-xl p-6">
-        <h2 className="text-xl font-semibold text-black mb-4">🌐 {t("language")}</h2>
+      <SettingCard title="🌐 Language">
         <div className="flex gap-4">
-          <button
-            onClick={() => changeLanguage("ms")}
-            className={`px-4 py-2 rounded-full font-medium text-sm transition border shadow-sm ${language === "ms" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"}`}
-          >
-            Bahasa Melayu
-          </button>
-          <button
-            onClick={() => changeLanguage("en")}
-            className={`px-4 py-2 rounded-full font-medium text-sm transition border shadow-sm ${language === "en" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"}`}
-          >
-            English
-          </button>
+          <LangButton label="Bahasa Melayu" active={language === "ms"} onClick={() => changeLanguage("ms")} />
+          <LangButton label="English" active={language === "en"} onClick={() => changeLanguage("en")} />
         </div>
-      </section>
+      </SettingCard>
 
-      {/* Notifikasi */}
-      <section className="bg-white shadow rounded-xl p-6">
-        <h2 className="text-xl font-semibold text-black mb-4">📲 {t("notifications")}</h2>
-        <div className="space-y-3">
-          <ToggleSwitch label={t("dailyReminder")} enabled={dailyReminder} onToggle={() => setDailyReminder(!dailyReminder)} />
-          <ToggleSwitch label={t("weeklyReminder")} enabled={weeklyReminder} onToggle={() => setWeeklyReminder(!weeklyReminder)} />
-        </div>
-      </section>
+      <SettingCard title="📲 Notifications">
+        <ToggleSwitch label={t("dailyReminder")} enabled={dailyReminder} onToggle={() => setDailyReminder(!dailyReminder)} />
+        <ToggleSwitch label={t("weeklyReminder")} enabled={weeklyReminder} onToggle={() => setWeeklyReminder(!weeklyReminder)} />
+      </SettingCard>
 
-      {/* Manual Completion Entry */}
-      <section className="bg-white shadow rounded-xl p-6">
-        <h2 className="text-xl font-semibold text-black mb-4">📘 Manual Completion Entry</h2>
-        <p className="text-gray-600 mb-4">{t("manualEntry")}</p>
+      <SettingCard title="📘 Manual Completion Entry">
+        <p className="text-gray-600 text-sm mb-2">{t("manualEntry")}</p>
         <div className="flex items-center gap-4">
           <input
             type="number"
@@ -229,56 +170,61 @@ const handleDeleteAccount = () => {
             onChange={(e) => setManualCount(e.target.value)}
             className="w-24 px-3 py-2 border rounded-xl"
           />
-          <button
-            onClick={handleManualUpdate}
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-          >
+          <button onClick={handleManualUpdate} className="bg-green-600 text-white px-4 py-2 rounded-xl hover:bg-green-700">
             {t("save")}
           </button>
         </div>
-      </section>
+      </SettingCard>
 
-      {/* Reset Progress */}
-      <section className="bg-white shadow rounded-xl p-6">
-        <h2 className="text-xl font-semibold text-black mb-4">🧼 {t("resetProgress")}</h2>
-        <p className="text-gray-600 mb-4">{t("Delete All your progress / Padam semua Progress")}</p>
-        <button
-          onClick={handleResetProgress}
-          className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
-        >
+      <SettingCard title="🧼 Reset Progress">
+        <p className="text-gray-600 text-sm mb-2">{t("Delete All your progress / Padam semua Progress")}</p>
+        <button onClick={handleResetProgress} className="bg-yellow-500 text-white px-4 py-2 rounded-xl hover:bg-yellow-600">
           {t("resetProgress")}
         </button>
-      </section>
+      </SettingCard>
 
-      {/* Delete Account */}
-      <section className="bg-white shadow rounded-xl p-6">
-        <h2 className="text-xl font-semibold text-black mb-4">🗑️ {t("deleteAccount")}</h2>
-        <p className="text-gray-600 mb-4">{t("Are you sure?")}</p>
-        <button
-          onClick={handleDeleteAccount}
-          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-        >
+      <SettingCard title="🗑️ Delete Account">
+        <p className="text-gray-600 text-sm mb-2">{t("Are you sure?")}</p>
+        <button onClick={handleDeleteAccount} className="bg-red-600 text-white px-4 py-2 rounded-xl hover:bg-red-700">
           {t("deleteAccount")}
         </button>
-      </section>
+      </SettingCard>
 
-      {/* Info App */}
-      <section className="bg-white shadow rounded-xl p-6">
-        <h2 className="text-xl font-semibold text-black mb-4">📜 {t("appInfo")}</h2>
-        <p className="text-gray-600 mb-2">{t("Bible Revival V.0.0.1")}</p>
-        <p className="text-sm text-gray-400">{t("version")}: 1.0.0</p>
-      </section>
+      <SettingCard title="📜 App Info">
+        <p className="text-gray-700 text-sm mb-1">Bible Revival V.0.0.1</p>
+        <p className="text-gray-400 text-xs">{t("version")}: 1.0.0</p>
+      </SettingCard>
 
-      {/* Support */}
-      <section className="bg-white shadow rounded-xl p-6">
-        <h2 className="text-xl font-semibold text-black mb-4">📞 {t("contactSupport")}</h2>
+      <SettingCard title="📞 Contact Support">
         <ul className="space-y-2 text-blue-600 text-sm">
           <li><a href="https://forms.gle/neroalex93@gmail.com" target="_blank" rel="noopener noreferrer">Google Form</a></li>
           <li><a href="https://wa.me/01129530841" target="_blank" rel="noopener noreferrer">WhatsApp</a></li>
           <li><a href="mailto:sokongan@bibletracker.com">Email Sokongan</a></li>
         </ul>
-      </section>
+      </SettingCard>
     </div>
+  );
+}
+
+function SettingCard({ title, children }) {
+  return (
+    <section className="bg-white border border-gray-200 shadow-sm rounded-2xl p-6 space-y-3">
+      <h2 className="text-lg font-semibold text-green-700">{title}</h2>
+      {children}
+    </section>
+  );
+}
+
+function LangButton({ label, active, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-4 py-2 rounded-full font-medium text-sm transition border shadow-sm ${
+        active ? "bg-green-600 text-white" : "bg-gray-100 text-gray-700"
+      }`}
+    >
+      {label}
+    </button>
   );
 }
 
@@ -288,10 +234,14 @@ function ToggleSwitch({ label, enabled, onToggle }) {
       <span className="text-sm text-black font-medium">{label}</span>
       <button
         onClick={onToggle}
-        className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ${enabled ? "bg-green-500" : "bg-gray-300"}`}
+        className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ${
+          enabled ? "bg-green-500" : "bg-gray-300"
+        }`}
       >
         <div
-          className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ${enabled ? "translate-x-6" : "translate-x-0"}`}
+          className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ${
+            enabled ? "translate-x-6" : "translate-x-0"
+          }`}
         />
       </button>
     </div>
