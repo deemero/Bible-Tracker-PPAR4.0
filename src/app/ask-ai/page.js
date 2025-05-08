@@ -1,8 +1,10 @@
 'use client';
 import { useState } from 'react';
 import { BotIcon, ClipboardCopy } from 'lucide-react';
+import useTranslation from '@/hooks/useTranslation'; // ✅ Import translation
 
 export default function AskAiPage() {
+  const { t } = useTranslation(); // ✅ Init hook
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState('');
   const [loading, setLoading] = useState(false);
@@ -37,7 +39,7 @@ export default function AskAiPage() {
         </div>
 
         {/* Title */}
-        <h1 className="text-2xl font-bold text-center text-green-700 mt-6">AI Revival</h1>
+        <h1 className="text-2xl font-bold text-center text-green-700 mt-6">{t("askAi.title")}</h1>
 
         {/* Preset Buttons */}
         <div className="flex flex-wrap gap-2 justify-center">
@@ -45,19 +47,19 @@ export default function AskAiPage() {
             onClick={() => handlePreset("Bagi kesaksian Hidup orang Kristian")}
             className="bg-green-100 hover:bg-green-200 px-3 py-1 rounded-full text-sm text-green-900"
           >
-            Kesaksian Hidup
+            {t("askAi.preset1")}
           </button>
           <button
             onClick={() => handlePreset("Tolong beri ayat Alkitab bila saya takut")}
             className="bg-green-100 hover:bg-green-200 px-3 py-1 rounded-full text-sm text-green-900"
           >
-            Bila Takut 
+            {t("askAi.preset2")}
           </button>
           <button
             onClick={() => handlePreset("Tuliskan doa ringkas untuk saya hari ini")}
             className="bg-green-100 hover:bg-green-200 px-3 py-1 rounded-full text-sm text-green-900"
           >
-            Doa Hari Ini
+            {t("askAi.preset3")}
           </button>
         </div>
 
@@ -67,7 +69,7 @@ export default function AskAiPage() {
           onChange={(e) => setQuestion(e.target.value)}
           className="w-full border border-green-300 rounded-lg p-3 text-sm focus:outline-green-500"
           rows={4}
-          placeholder="Contoh: Apa maksud Roma 12:2?"
+          placeholder={t("askAi.placeholder")}
         />
 
         {/* Submit Button */}
@@ -76,29 +78,27 @@ export default function AskAiPage() {
           disabled={loading || !question}
           className="w-full bg-green-600 hover:bg-green-700 transition text-white py-2 rounded-lg text-sm font-semibold shadow-md"
         >
-          {loading ? '⏳ Menjawab...' : '🙏 Tanya'}
+          {loading ? t("askAi.loading") : t("askAi.askBtn")}
         </button>
 
         {/* AI Answer */}
         {answer && (
           <div className="bg-green-50 border border-green-200 rounded-xl p-4 shadow-inner">
             <div className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed tracking-normal">
-              <strong className="text-green-700">Jawapan AI:</strong><br />
+              <strong className="text-green-700">{t("askAi.answerLabel")}:</strong><br />
               {answer}
             </div>
 
             {/* 🔔 Reminder bawah jawapan */}
             <p className="text-xs text-gray-500 italic mt-3">
-  ⚠️ Saya cuma AI. Jangan harap 100% ya.  
-   Jangan bergantung sepenuhnya — iman datang dari pembacaan, doa, dan persekutuan yang sebenar.
-</p>
-
+              {t("askAi.disclaimer")}
+            </p>
 
             <button
               onClick={handleCopy}
               className="mt-3 flex items-center gap-1 text-xs text-green-600 hover:text-green-800"
             >
-              <ClipboardCopy size={14} /> Salin Jawapan
+              <ClipboardCopy size={14} /> {t("askAi.copy")}
             </button>
           </div>
         )}

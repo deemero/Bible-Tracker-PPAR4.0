@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import Image from "next/image";
 import { useSession } from "@supabase/auth-helpers-react";
+import useTranslation from "@/hooks/useTranslation"; // ✅ Import translation hook
 
 export default function FriendListPage() {
   const session = useSession();
   const [friends, setFriends] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const { t } = useTranslation(); // ✅ Gunakan hook
 
   useEffect(() => {
     const fetchFriends = async () => {
@@ -17,7 +19,6 @@ export default function FriendListPage() {
       } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Sync email jika tiada
       const { data: profile } = await supabase
         .from("profiles")
         .select("email, username")
@@ -36,7 +37,6 @@ export default function FriendListPage() {
         else console.log("✅ Email synced to profiles");
       }
 
-      // Ambil semua kawan
       const { data: friendsData } = await supabase
         .from("friends")
         .select("sender_id, receiver_id")
@@ -50,25 +50,21 @@ export default function FriendListPage() {
       const allUserIds = [...new Set([...friendIds, user.id])];
       if (allUserIds.length === 0) return setFriends([]);
 
-      // Ambil profil
       const { data: profilesData } = await supabase
         .from("profiles")
         .select("id, username, avatar_url, is_online, reading_streak, email")
         .in("id", allUserIds);
 
-      // Ambil kiraan progress dari VIEW
       const { data: readCounts } = await supabase
         .from("user_read_progress")
         .select("user_id, total")
         .in("user_id", allUserIds);
 
-      // Peta user_id → total chapter dibaca
       const userReadCount = {};
       readCounts?.forEach((row) => {
         userReadCount[row.user_id] = row.total;
       });
 
-      // Gabung data profil + progress
       const combined = profilesData.map((user) => {
         const readCount = userReadCount[user.id] || 0;
         return {
@@ -78,7 +74,6 @@ export default function FriendListPage() {
         };
       });
 
-      // Susun ikut progress tertinggi
       setFriends(
         combined.sort((a, b) => b.progress_percentage - a.progress_percentage)
       );
@@ -97,13 +92,13 @@ export default function FriendListPage() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-6">
       <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">
-        Senarai Kawan 📖
+        {t("friendList.title")}
       </h1>
 
       <div className="mb-4 flex justify-center gap-4">
         <input
           type="text"
-          placeholder="Cari Nama Pengguna..."
+          placeholder={t("friendList.searchPlaceholder")}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full sm:w-64 px-4 py-2 rounded-xl border border-gray-300 bg-white text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
@@ -112,7 +107,7 @@ export default function FriendListPage() {
           onClick={handleSearch}
           className="bg-blue-500 text-white px-4 py-2 rounded-xl"
         >
-          Cari
+          {t("friendList.searchBtn")}
         </button>
       </div>
 
@@ -142,13 +137,13 @@ export default function FriendListPage() {
               <div className="font-medium">{user.username}</div>
               <div className="text-xs font-semibold mt-0.5">
                 {user.is_online ? (
-                  <span className="text-green-500">🟢 Online</span>
+                  <span className="text-green-500">{t("friendList.online")}</span>
                 ) : (
-                  <span className="text-gray-400">⚫ Offline</span>
+                  <span className="text-gray-400">{t("friendList.offline")}</span>
                 )}
               </div>
               <div className="text-xs text-gray-500 mb-1">
-                {user.chapters_read} Bab dibaca
+                {user.chapters_read} {t("friendList.chaptersRead")}
               </div>
               <div className="w-full bg-gray-200 h-2 rounded-full">
                 <div
@@ -179,11 +174,11 @@ export default function FriendListPage() {
                     )}, jom baca Firman hari ini! 🔥`}
                     className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 hover:bg-green-200 transition"
                   >
-                    Poke
+                    {t("friendList.poke")}
                   </a>
                 ) : (
                   <span className="text-xs text-gray-400 italic">
-                    Tiada email
+                    {t("friendList.noEmail")}
                   </span>
                 )}
               </div>

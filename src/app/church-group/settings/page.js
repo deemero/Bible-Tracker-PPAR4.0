@@ -1,20 +1,25 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import useTranslation from "@/hooks/useTranslation";
+import { useLanguage } from "@/context/LanguageProvider";
+import { toast } from "react-hot-toast";
+
 
 export default function SettingsPage() {
   const [dailyReminder, setDailyReminder] = useState(false);
   const [weeklyReminder, setWeeklyReminder] = useState(false);
-  const [language, setLanguage] = useState("ms");
   const [manualCount, setManualCount] = useState("");
   const [userId, setUserId] = useState(null);
+  const { t } = useTranslation();
+  const { language, changeLanguage } = useLanguage();
 
   useEffect(() => {
     const fetchUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setUserId(user.id);
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from("profiles")
           .select("total_completions")
           .eq("id", user.id)
@@ -25,110 +30,177 @@ export default function SettingsPage() {
     fetchUser();
   }, []);
 
-  const handleManualUpdate = async () => {
-    if (!confirm("Simpan jumlah kali anda sudah khatam Alkitab?")) return;
 
-    const { error } = await supabase
-      .from("profiles")
-      .update({ total_completions: parseInt(manualCount) })
-      .eq("id", userId);
 
-    if (error) {
-      alert("❌ Gagal simpan.");
-      console.error("Manual update error:", JSON.stringify(error, null, 2));
-    } else {
-      alert("✅ Berjaya disimpan.");
-    }
-  };
+//junmlah
 
-  const handleResetProgress = async () => {
-    if (!confirm("Adakah anda pasti ingin hapus semua progress bacaan?")) return;
-    if (!userId) {
-      alert("❌ User tidak dijumpai.");
-      return;
-    }
-  
-    // 1. Padam semua data baca user
-    const { error: deleteErr } = await supabase
+const handleManualUpdate = async () => {
+  toast(
+    (t) => (
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-gray-800">
+           Are you sure you've read this much??
+        </p>
+        <div className="flex gap-2">
+          <button
+            onClick={async () => {
+              toast.dismiss(t.id);
+              const { error } = await supabase
+                .from("profiles")
+                .update({ total_completions: parseInt(manualCount) })
+                .eq("id", userId);
+
+              if (error) {
+                toast.error("❌ Failed. Try Again!", {
+                  style: {
+                    borderRadius: "12px",
+                    background: "#ffe6e6",
+                    color: "#b91c1c",
+                  },
+                });
+              } else {
+                toast.success("✅ Done! Keep Going  ✨", {
+                  style: {
+                    borderRadius: "12px",
+                    background: "#ecfdf5",
+                    color: "#065f46",
+                  },
+                });
+              }
+            }}
+            className="px-3 py-1 text-sm rounded-lg bg-green-600 text-white hover:bg-green-700"
+          >
+            Of course
+          </button>
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-3 py-1 text-sm rounded-lg bg-gray-300 text-gray-800 hover:bg-gray-400"
+          >
+            Sorry No
+          </button>
+        </div>
+      </div>
+    ),
+    { duration: 10000 }
+  );
+};
+
+
+
+const handleResetProgress = async () => {
+  const confirmReset = await new Promise((resolve) => {
+    toast((t) => (
+      <div className="space-y-2 text-sm">
+        <p>⚠️ Are you sure you want to reset your reading progress?</p>
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              toast.dismiss(t.id);
+              resolve(true);
+            }}
+            className="px-3 py-1 rounded bg-red-600 text-white hover:bg-red-700"
+          >
+            Yes, Reset
+          </button>
+          <button
+            onClick={() => {
+              toast.dismiss(t.id);
+              resolve(false);
+            }}
+            className="px-3 py-1 rounded bg-gray-300 text-gray-800 hover:bg-gray-400"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    ), { duration: 10000 });
+  });
+
+
+  if (!confirmReset) return;
+
+  if (!userId) {
+    toast.error("❌ User not found.");
+    return;
+  }
+
+  const { error: deleteErr } = await supabase
+    .from("reading_progress")
+    .delete()
+    .eq("user_id", userId);
+
+  if (deleteErr) {
+    toast.error("❌ Failed to delete progress.");
+    console.error(deleteErr);
+    return;
+  }
+
+  const { data: chapters, error: chapterErr } = await supabase
+    .from("chapters")
+    .select("book_name, chapter_number");
+
+  if (chapterErr || !chapters) {
+    toast.error("❌ Failed to fetch chapters.");
+    console.error(chapterErr);
+    return;
+  }
+
+  const seen = new Set();
+  const uniqueChapters = chapters.filter(c => {
+    const key = `${c.book_name}-${c.chapter_number}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  const newData = uniqueChapters.map(c => ({
+    user_id: userId,
+    book_name: c.book_name,
+    chapter_number: c.chapter_number,
+    is_read: false
+  }));
+
+  const chunkSize = 300;
+  for (let i = 0; i < newData.length; i += chunkSize) {
+    const chunk = newData.slice(i, i + chunkSize);
+
+    const { error: insertErr } = await supabase
       .from("reading_progress")
-      .delete()
-      .eq("user_id", userId);
-  
-    if (deleteErr) {
-      alert("❌ Gagal padam progress.");
-      console.error(deleteErr);
+      .upsert(chunk, { onConflict: ["user_id", "book_name", "chapter_number"] });
+
+    if (insertErr) {
+      console.error("❌ Insert error:", insertErr);
+      toast.error("❌ Failed to reset some data.");
       return;
     }
-  
-    // 2. Ambil semua chapters dari table 'chapters'
-    const { data: chapters, error: chapterErr } = await supabase
-      .from("chapters")
-      .select("book_name, chapter_number");
-  
-    if (chapterErr || !chapters) {
-      alert("❌ Gagal ambil senarai bab.");
-      console.error(chapterErr);
-      return;
-    }
-  
-    // 3. Filter untuk pastikan tiada duplicate dalam batch
-    const seen = new Set();
-    const uniqueChapters = chapters.filter(c => {
-      const key = `${c.book_name}-${c.chapter_number}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-  
-    const newData = uniqueChapters.map(c => ({
-      user_id: userId,
-      book_name: c.book_name,
-      chapter_number: c.chapter_number,
-      is_read: false
-    }));
-  
-    // 4. Insert secara berkumpulan
-    const chunkSize = 300;
-    for (let i = 0; i < newData.length; i += chunkSize) {
-      const chunk = newData.slice(i, i + chunkSize);
-  
-      const { error: insertErr } = await supabase
-        .from("reading_progress")
-        .upsert(chunk, { onConflict: ["user_id", "book_name", "chapter_number"] });
-  
-      if (insertErr) {
-        console.error("❌ Insert error:", insertErr);
-        alert("❌ Gagal reset sebahagian data:\n" + JSON.stringify(insertErr, null, 2));
-        return;
-      }
-    }
-  
-    alert("✅ Semua progress berjaya direset!");
-  };
-  
-  
-  const handleDeleteAccount = () => {
-    if (confirm("Adakah anda pasti ingin padam akaun anda secara kekal?")) {
-      alert("Akaun anda telah dipadam.");
-    }
-  };
+  }
+
+  toast.success("✅ All progress has been reset. Start fresh!");
+};
+
+const handleDeleteAccount = () => {
+  const confirmDelete = window.confirm("⚠️ Are you sure you want to delete your account permanently?");
+  if (confirmDelete) {
+    toast("🗑️ Account deletion is under development.");
+  }
+};
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">
-      <h1 className="text-3xl font-bold text-center text-black mb-6">⚙️ Settings</h1>
+      <h1 className="text-3xl font-bold text-center text-black mb-6">⚙️ {t("settings")}</h1>
 
       {/* Bahasa */}
       <section className="bg-white shadow rounded-xl p-6">
-        <h2 className="text-xl font-semibold text-black mb-4">🌐 Bahasa</h2>
+        <h2 className="text-xl font-semibold text-black mb-4">🌐 {t("language")}</h2>
         <div className="flex gap-4">
           <button
-            onClick={() => setLanguage("ms")}
+            onClick={() => changeLanguage("ms")}
             className={`px-4 py-2 rounded-full font-medium text-sm transition border shadow-sm ${language === "ms" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"}`}
           >
             Bahasa Melayu
           </button>
           <button
-            onClick={() => setLanguage("en")}
+            onClick={() => changeLanguage("en")}
             className={`px-4 py-2 rounded-full font-medium text-sm transition border shadow-sm ${language === "en" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"}`}
           >
             English
@@ -138,17 +210,17 @@ export default function SettingsPage() {
 
       {/* Notifikasi */}
       <section className="bg-white shadow rounded-xl p-6">
-        <h2 className="text-xl font-semibold text-black mb-4">📲 Notifikasi</h2>
+        <h2 className="text-xl font-semibold text-black mb-4">📲 {t("notifications")}</h2>
         <div className="space-y-3">
-          <ToggleSwitch label="Hantar notifikasi harian untuk baca Alkitab" enabled={dailyReminder} onToggle={() => setDailyReminder(!dailyReminder)} />
-          <ToggleSwitch label="Hantar email peringatan mingguan" enabled={weeklyReminder} onToggle={() => setWeeklyReminder(!weeklyReminder)} />
+          <ToggleSwitch label={t("dailyReminder")} enabled={dailyReminder} onToggle={() => setDailyReminder(!dailyReminder)} />
+          <ToggleSwitch label={t("weeklyReminder")} enabled={weeklyReminder} onToggle={() => setWeeklyReminder(!weeklyReminder)} />
         </div>
       </section>
 
       {/* Manual Completion Entry */}
       <section className="bg-white shadow rounded-xl p-6">
         <h2 className="text-xl font-semibold text-black mb-4">📘 Manual Completion Entry</h2>
-        <p className="text-gray-600 mb-4">Sudah berapa kali anda habis baca Alkitab sebelum guna app ini?</p>
+        <p className="text-gray-600 mb-4">{t("manualEntry")}</p>
         <div className="flex items-center gap-4">
           <input
             type="number"
@@ -161,47 +233,45 @@ export default function SettingsPage() {
             onClick={handleManualUpdate}
             className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
           >
-            Simpan
+            {t("save")}
           </button>
         </div>
       </section>
 
       {/* Reset Progress */}
       <section className="bg-white shadow rounded-xl p-6">
-        <h2 className="text-xl font-semibold text-black mb-4">🧼 Reset Progress</h2>
-        <p className="text-gray-600 mb-4">Hapus semua progress bacaan anda. Tindakan ini tidak boleh diundur.</p>
+        <h2 className="text-xl font-semibold text-black mb-4">🧼 {t("resetProgress")}</h2>
+        <p className="text-gray-600 mb-4">{t("Delete All your progress / Padam semua Progress")}</p>
         <button
           onClick={handleResetProgress}
           className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
         >
-          Reset Progress
+          {t("resetProgress")}
         </button>
       </section>
 
       {/* Delete Account */}
       <section className="bg-white shadow rounded-xl p-6">
-        <h2 className="text-xl font-semibold text-black mb-4">🗑️ Padam Akaun</h2>
-        <p className="text-gray-600 mb-4">Padam akaun anda secara kekal dari sistem.</p>
+        <h2 className="text-xl font-semibold text-black mb-4">🗑️ {t("deleteAccount")}</h2>
+        <p className="text-gray-600 mb-4">{t("Are you sure?")}</p>
         <button
           onClick={handleDeleteAccount}
           className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
         >
-          Delete Account
+          {t("deleteAccount")}
         </button>
       </section>
 
       {/* Info App */}
       <section className="bg-white shadow rounded-xl p-6">
-        <h2 className="text-xl font-semibold text-black mb-4">📜 Info Aplikasi</h2>
-        <p className="text-gray-600 mb-2">
-          Bible Tracker dibina untuk membantu komuniti membaca Alkitab secara konsisten dan berkongsi kemajuan bersama.
-        </p>
-        <p className="text-sm text-gray-400">Versi Aplikasi: 1.0.0</p>
+        <h2 className="text-xl font-semibold text-black mb-4">📜 {t("appInfo")}</h2>
+        <p className="text-gray-600 mb-2">{t("Bible Revival V.0.0.1")}</p>
+        <p className="text-sm text-gray-400">{t("version")}: 1.0.0</p>
       </section>
 
       {/* Support */}
       <section className="bg-white shadow rounded-xl p-6">
-        <h2 className="text-xl font-semibold text-black mb-4">📞 Hubungi Sokongan</h2>
+        <h2 className="text-xl font-semibold text-black mb-4">📞 {t("contactSupport")}</h2>
         <ul className="space-y-2 text-blue-600 text-sm">
           <li><a href="https://forms.gle/neroalex93@gmail.com" target="_blank" rel="noopener noreferrer">Google Form</a></li>
           <li><a href="https://wa.me/01129530841" target="_blank" rel="noopener noreferrer">WhatsApp</a></li>

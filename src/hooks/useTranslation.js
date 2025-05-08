@@ -5,14 +5,18 @@ export default function useTranslation() {
   const { language } = useLanguage();
 
   const t = (key, vars = {}) => {
-    const value = translations[language]?.[key] || key;
+    const keys = key.split(".");
+    let value = translations[language];
 
-    // Ganti {placeholders} dalam string jika ada
+    for (const k of keys) {
+      value = value?.[k];
+    }
+
     if (typeof value === "string") {
       return value.replace(/{(.*?)}/g, (_, v) => vars[v] || `{${v}}`);
     }
 
-    return value;
+    return value || key;
   };
 
   return { t, language };

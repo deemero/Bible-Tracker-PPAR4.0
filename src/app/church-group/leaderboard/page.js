@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import Image from "next/image";
+import useTranslation from "@/hooks/useTranslation";
 
 export default function ChurchLeaderboardPage() {
   const [tab, setTab] = useState("overall");
@@ -10,6 +11,7 @@ export default function ChurchLeaderboardPage() {
   const [monthlyLeaders, setMonthlyLeaders] = useState([]);
   const [streakLeaders, setStreakLeaders] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const { t } = useTranslation();
 
   useEffect(() => {
     const load = async () => {
@@ -38,7 +40,6 @@ export default function ChurchLeaderboardPage() {
     const userIds = usersInChurch.map((u) => u.id);
     const userMap = Object.fromEntries(usersInChurch.map(u => [u.id, u]));
 
-    // ✅ Guna pre-aggregated view
     const { data: readCounts } = await supabase
       .from("user_read_progress")
       .select("user_id, total")
@@ -60,7 +61,7 @@ export default function ChurchLeaderboardPage() {
 
     const sorted = [...finalList].sort((a, b) => b.progress_percentage - a.progress_percentage);
     const top10 = sorted.slice(0, 10);
-    const top5Monthly = sorted.slice(0, 5); // Optional logic
+    const top5Monthly = sorted.slice(0, 5);
     const streakSorted = [...finalList]
       .filter(u => u.reading_streak > 0)
       .sort((a, b) => b.reading_streak - a.reading_streak);
@@ -96,7 +97,7 @@ export default function ChurchLeaderboardPage() {
                 )}
                 <div className="text-sm font-semibold text-gray-600 mb-1">#{index + 1}</div>
                 <div className="font-bold text-lg">{user.username}</div>
-                <div className="text-xs text-gray-500 mb-1">{user.chapters_read} Bab</div>
+                <div className="text-xs text-gray-500 mb-1">{t("leaderboard.chaptersRead", { count: user.chapters_read })}</div>
                 <div className="text-sm font-semibold text-blue-500">{user.progress_percentage}%</div>
               </div>
             ))}
@@ -122,7 +123,7 @@ export default function ChurchLeaderboardPage() {
               </div>
               <div className="flex-1">
                 <div className="font-medium">{user.username}</div>
-                <div className="text-xs text-gray-500 mb-1">{user.chapters_read} Bab dibaca</div>
+                <div className="text-xs text-gray-500 mb-1">{t("leaderboard.chaptersRead", { count: user.chapters_read })}</div>
                 <div className="w-full bg-gray-200 h-2 rounded-full">
                   <div
                     className={`h-full rounded-full transition-all duration-300 ${
@@ -168,7 +169,7 @@ export default function ChurchLeaderboardPage() {
             <div className="w-16 h-16 rounded-full bg-gray-300 mb-2" />
           )}
           <div className="font-semibold">{user.username}</div>
-          <div className="text-sm text-orange-600 font-bold">{user.reading_streak} day streak</div>
+          <div className="text-sm text-orange-600 font-bold">{t("leaderboard.streakDays", { count: user.reading_streak })}</div>
         </div>
       ))}
     </div>
@@ -176,13 +177,13 @@ export default function ChurchLeaderboardPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6">
-      <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">Church Leaderboard</h1>
+      <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">{t("leaderboard.title")}</h1>
 
       <div className="flex justify-center flex-wrap gap-3 mb-4">
         {[
-          { key: "overall", label: "Top 10 Gereja" },
-          { key: "monthly", label: "Top 5 Bulan Ini" },
-          { key: "streak", label: "Streak 🔥" }
+          { key: "overall", label: t("leaderboard.top10") },
+          { key: "monthly", label: t("leaderboard.top5") },
+          { key: "streak", label: t("leaderboard.streak") }
         ].map(({ key, label }) => (
           <button
             key={key}
@@ -199,7 +200,7 @@ export default function ChurchLeaderboardPage() {
       <div className="mb-6">
         <input
           type="text"
-          placeholder="Cari nama..."
+          placeholder={t("leaderboard.searchPlaceholder")}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full sm:w-64 px-4 py-2 rounded-xl border border-gray-300 bg-white text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-300"

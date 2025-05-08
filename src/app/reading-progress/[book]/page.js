@@ -3,6 +3,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { bibleBooks } from "@/lib/bibleData";
+import useTranslation from "@/hooks/useTranslation"; // ✅ Tambah ini
 
 export default function BookProgressPage() {
   const { book } = useParams();
@@ -12,6 +13,7 @@ export default function BookProgressPage() {
   const [progress, setProgress] = useState(0);
   const [showCongrats, setShowCongrats] = useState(false);
 
+  const { t } = useTranslation(); // ✅ Tambah
   const bookSlug = book;
   const selectedBook = bibleBooks
     .flatMap(sec => sec.books)
@@ -83,7 +85,7 @@ export default function BookProgressPage() {
     <div className="w-full max-w-3xl mx-auto px-4 py-6 relative">
       {showCongrats && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-green-100 text-green-800 px-6 py-4 rounded-xl shadow-lg text-center z-50">
-          🎉 Tahniah! Anda telah selesai membaca {selectedBook?.name}!
+          {t("congratsBook", { book: selectedBook?.name })}
         </div>
       )}
 
@@ -91,15 +93,15 @@ export default function BookProgressPage() {
         onClick={() => router.push("/reading-progress")}
         className="mb-4 px-4 py-2 bg-blue-500 text-white font-semibold rounded hover:bg-blue-600 shadow transition"
       >
-        ← Kembali ke senarai kitab
+        {t("backToList")}
       </button>
 
       <h1 className="text-2xl text-black font-bold mb-2 text-center">
-        Pembacaan: {selectedBook?.name}
+        {t("readingTitle", { book: selectedBook?.name })}
       </h1>
 
       <p className="text-center mb-4 text-sm font-semibold text-black">
-        Progress: {Math.round(progress)}%
+        {t("progress")}: {Math.round(progress)}%
       </p>
 
       <div className="w-full bg-gray-300 h-3 rounded-full mb-6 overflow-hidden">
@@ -121,7 +123,7 @@ export default function BookProgressPage() {
               onChange={(e) => handleCheckboxChange(item.chapter, e.target.checked)}
               className="accent-green-500 w-4 h-4"
             />
-            Chapter {item.chapter}
+            {t("chapter")} {item.chapter}
           </label>
         ))}
       </div>

@@ -5,18 +5,21 @@ import { supabase } from "@/lib/supabaseClient";
 import { useSession } from "@supabase/auth-helpers-react";
 import Image from "next/image";
 import toast from "react-hot-toast";
+import useTranslation from "@/hooks/useTranslation"; // ✅ Import translation hook
 
 export default function FriendRequestsPage() {
   const session = useSession();
+  const { t } = useTranslation(); // ✅ Guna hook untuk multi-bahasa
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
 
-      // ✅ Ambil semua request masuk yang masih pending
       const { data: requestsData, error } = await supabase
         .from("friends")
         .select("id, sender_id, receiver_id, status, created_at, sender:sender_id (username, avatar_url)")
@@ -25,7 +28,7 @@ export default function FriendRequestsPage() {
         .order("created_at", { ascending: false });
 
       if (error) {
-        toast.error("Gagal ambil permintaan kawan.");
+        toast.error(t("friendRequests.errorFetch"));
         setRequests([]);
       } else {
         setRequests(requestsData);
@@ -44,35 +47,32 @@ export default function FriendRequestsPage() {
       .eq("id", id);
 
     if (error) {
-      toast.error("Gagal terima kawan.");
+      toast.error(t("friendRequests.errorAccept"));
     } else {
-      toast.success("Kawan diterima!");
-      setRequests(prev => prev.filter(r => r.id !== id));
+      toast.success(t("friendRequests.successAccept"));
+      setRequests((prev) => prev.filter((r) => r.id !== id));
     }
   };
 
   const handleDecline = async (id) => {
-    const { error } = await supabase
-      .from("friends")
-      .delete()
-      .eq("id", id);
+    const { error } = await supabase.from("friends").delete().eq("id", id);
 
     if (error) {
-      toast.error("Gagal tolak permintaan.");
+      toast.error(t("friendRequests.errorDecline"));
     } else {
-      toast.success("Permintaan ditolak.");
-      setRequests(prev => prev.filter(r => r.id !== id));
+      toast.success(t("friendRequests.successDecline"));
+      setRequests((prev) => prev.filter((r) => r.id !== id));
     }
   };
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6">
-      <h1 className="text-3xl font-bold text-center mb-6">Permintaan Kawan 📨</h1>
+      <h1 className="text-3xl font-bold text-center mb-6">{t("friendRequests.title")}</h1>
 
       {loading ? (
-        <p className="text-center text-gray-500 animate-pulse">Memuatkan...</p>
-      ) : !requests || requests.length === 0 ? (
-        <p className="text-center text-gray-500">Tiada permintaan sekarang</p>
+        <p className="text-center text-gray-500 animate-pulse">{t("friendRequests.loading")}</p>
+      ) : requests.length === 0 ? (
+        <p className="text-center text-gray-500">{t("friendRequests.noRequests")}</p>
       ) : (
         <div className="space-y-3">
           {requests.map((req) => (
@@ -94,7 +94,7 @@ export default function FriendRequestsPage() {
 
               <div className="flex-1">
                 <div className="font-medium">{req.sender?.username || "Pengguna Tanpa Nama"}</div>
-                <div className="text-xs text-gray-500">Mahu jadi kawan 📬</div>
+                <div className="text-xs text-gray-500">{t("friendRequests.wantsToBeFriend")}</div>
               </div>
 
               <div className="flex gap-2">
@@ -102,13 +102,13 @@ export default function FriendRequestsPage() {
                   onClick={() => handleAccept(req.id)}
                   className="bg-green-500 text-white px-3 py-1 rounded-full text-xs hover:bg-green-600"
                 >
-                  Terima
+                  {t("friendRequests.accept")}
                 </button>
                 <button
                   onClick={() => handleDecline(req.id)}
                   className="bg-red-500 text-white px-3 py-1 rounded-full text-xs hover:bg-red-600"
                 >
-                  Tolak
+                  {t("friendRequests.decline")}
                 </button>
               </div>
             </div>

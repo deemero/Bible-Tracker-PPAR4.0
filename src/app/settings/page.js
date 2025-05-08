@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import useTranslation from "@/hooks/useTranslation";
 import { useLanguage } from "@/context/LanguageProvider";
+import { toast } from "react-hot-toast";
+
 
 export default function SettingsPage() {
   const [dailyReminder, setDailyReminder] = useState(false);
@@ -10,8 +12,7 @@ export default function SettingsPage() {
   const [manualCount, setManualCount] = useState("");
   const [userId, setUserId] = useState(null);
   const { t } = useTranslation();
-  const { language, changeLanguage } = useLanguage(); // ✅ Guna yang global
-  
+  const { language, changeLanguage } = useLanguage();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -29,88 +30,160 @@ export default function SettingsPage() {
     fetchUser();
   }, []);
 
-  const handleManualUpdate = async () => {
-    if (!confirm("Simpan jumlah kali anda sudah khatam Alkitab?")) return;
 
-    const { error } = await supabase
-      .from("profiles")
-      .update({ total_completions: parseInt(manualCount) })
-      .eq("id", userId);
 
-    if (error) {
-      alert("❌ Gagal simpan.");
-      console.error("Manual update error:", JSON.stringify(error, null, 2));
-    } else {
-      alert("✅ Berjaya disimpan.");
-    }
-  };
+//junmlah
 
-  const handleResetProgress = async () => {
-    if (!confirm("Adakah anda pasti ingin hapus semua progress bacaan?")) return;
-    if (!userId) {
-      alert("❌ User tidak dijumpai.");
-      return;
-    }
+const handleManualUpdate = async () => {
+  toast(
+    (t) => (
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-gray-800">
+           Are you sure you've read this much??
+        </p>
+        <div className="flex gap-2">
+          <button
+            onClick={async () => {
+              toast.dismiss(t.id);
+              const { error } = await supabase
+                .from("profiles")
+                .update({ total_completions: parseInt(manualCount) })
+                .eq("id", userId);
 
-    const { error: deleteErr } = await supabase
+              if (error) {
+                toast.error("❌ Failed. Try Again!", {
+                  style: {
+                    borderRadius: "12px",
+                    background: "#ffe6e6",
+                    color: "#b91c1c",
+                  },
+                });
+              } else {
+                toast.success("✅ Done! Keep Going  ✨", {
+                  style: {
+                    borderRadius: "12px",
+                    background: "#ecfdf5",
+                    color: "#065f46",
+                  },
+                });
+              }
+            }}
+            className="px-3 py-1 text-sm rounded-lg bg-green-600 text-white hover:bg-green-700"
+          >
+            Of course
+          </button>
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-3 py-1 text-sm rounded-lg bg-gray-300 text-gray-800 hover:bg-gray-400"
+          >
+            Sorry No
+          </button>
+        </div>
+      </div>
+    ),
+    { duration: 10000 }
+  );
+};
+
+
+
+const handleResetProgress = async () => {
+  const confirmReset = await new Promise((resolve) => {
+    toast((t) => (
+      <div className="space-y-2 text-sm">
+        <p>⚠️ Are you sure you want to reset your reading progress?</p>
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              toast.dismiss(t.id);
+              resolve(true);
+            }}
+            className="px-3 py-1 rounded bg-red-600 text-white hover:bg-red-700"
+          >
+            Yes, Reset
+          </button>
+          <button
+            onClick={() => {
+              toast.dismiss(t.id);
+              resolve(false);
+            }}
+            className="px-3 py-1 rounded bg-gray-300 text-gray-800 hover:bg-gray-400"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    ), { duration: 10000 });
+  });
+
+
+  if (!confirmReset) return;
+
+  if (!userId) {
+    toast.error("❌ User not found.");
+    return;
+  }
+
+  const { error: deleteErr } = await supabase
+    .from("reading_progress")
+    .delete()
+    .eq("user_id", userId);
+
+  if (deleteErr) {
+    toast.error("❌ Failed to delete progress.");
+    console.error(deleteErr);
+    return;
+  }
+
+  const { data: chapters, error: chapterErr } = await supabase
+    .from("chapters")
+    .select("book_name, chapter_number");
+
+  if (chapterErr || !chapters) {
+    toast.error("❌ Failed to fetch chapters.");
+    console.error(chapterErr);
+    return;
+  }
+
+  const seen = new Set();
+  const uniqueChapters = chapters.filter(c => {
+    const key = `${c.book_name}-${c.chapter_number}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  const newData = uniqueChapters.map(c => ({
+    user_id: userId,
+    book_name: c.book_name,
+    chapter_number: c.chapter_number,
+    is_read: false
+  }));
+
+  const chunkSize = 300;
+  for (let i = 0; i < newData.length; i += chunkSize) {
+    const chunk = newData.slice(i, i + chunkSize);
+
+    const { error: insertErr } = await supabase
       .from("reading_progress")
-      .delete()
-      .eq("user_id", userId);
+      .upsert(chunk, { onConflict: ["user_id", "book_name", "chapter_number"] });
 
-    if (deleteErr) {
-      alert("❌ Gagal padam progress.");
-      console.error(deleteErr);
+    if (insertErr) {
+      console.error("❌ Insert error:", insertErr);
+      toast.error("❌ Failed to reset some data.");
       return;
     }
+  }
 
-    const { data: chapters, error: chapterErr } = await supabase
-      .from("chapters")
-      .select("book_name, chapter_number");
+  toast.success("✅ All progress has been reset. Start fresh!");
+};
 
-    if (chapterErr || !chapters) {
-      alert("❌ Gagal ambil senarai bab.");
-      console.error(chapterErr);
-      return;
-    }
-
-    const seen = new Set();
-    const uniqueChapters = chapters.filter(c => {
-      const key = `${c.book_name}-${c.chapter_number}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-
-    const newData = uniqueChapters.map(c => ({
-      user_id: userId,
-      book_name: c.book_name,
-      chapter_number: c.chapter_number,
-      is_read: false
-    }));
-
-    const chunkSize = 300;
-    for (let i = 0; i < newData.length; i += chunkSize) {
-      const chunk = newData.slice(i, i + chunkSize);
-
-      const { error: insertErr } = await supabase
-        .from("reading_progress")
-        .upsert(chunk, { onConflict: ["user_id", "book_name", "chapter_number"] });
-
-      if (insertErr) {
-        console.error("❌ Insert error:", insertErr);
-        alert("❌ Gagal reset sebahagian data:\n" + JSON.stringify(insertErr, null, 2));
-        return;
-      }
-    }
-
-    alert("✅ Semua progress berjaya direset!");
-  };
-
-  const handleDeleteAccount = () => {
-    if (confirm("Adakah anda pasti ingin padam akaun anda secara kekal?")) {
-      alert("Akaun anda telah dipadam.");
-    }
-  };
+const handleDeleteAccount = () => {
+  const confirmDelete = window.confirm("⚠️ Are you sure you want to delete your account permanently?");
+  if (confirmDelete) {
+    toast("🗑️ Account deletion is under development.");
+  }
+};
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">
@@ -168,7 +241,7 @@ export default function SettingsPage() {
       {/* Reset Progress */}
       <section className="bg-white shadow rounded-xl p-6">
         <h2 className="text-xl font-semibold text-black mb-4">🧼 {t("resetProgress")}</h2>
-        <p className="text-gray-600 mb-4">{t("resetDesc")}</p>
+        <p className="text-gray-600 mb-4">{t("Delete All your progress / Padam semua Progress")}</p>
         <button
           onClick={handleResetProgress}
           className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
@@ -180,7 +253,7 @@ export default function SettingsPage() {
       {/* Delete Account */}
       <section className="bg-white shadow rounded-xl p-6">
         <h2 className="text-xl font-semibold text-black mb-4">🗑️ {t("deleteAccount")}</h2>
-        <p className="text-gray-600 mb-4">{t("deleteDesc")}</p>
+        <p className="text-gray-600 mb-4">{t("Are you sure?")}</p>
         <button
           onClick={handleDeleteAccount}
           className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
@@ -192,7 +265,7 @@ export default function SettingsPage() {
       {/* Info App */}
       <section className="bg-white shadow rounded-xl p-6">
         <h2 className="text-xl font-semibold text-black mb-4">📜 {t("appInfo")}</h2>
-        <p className="text-gray-600 mb-2">{t("appPurpose")}</p>
+        <p className="text-gray-600 mb-2">{t("Bible Revival V.0.0.1")}</p>
         <p className="text-sm text-gray-400">{t("version")}: 1.0.0</p>
       </section>
 

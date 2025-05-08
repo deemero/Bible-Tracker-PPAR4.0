@@ -4,9 +4,11 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import Image from "next/image";
 import { useSession } from "@supabase/auth-helpers-react";
+import useTranslation from "@/hooks/useTranslation";
 
 export default function ChurchPlayerListPage() {
   const session = useSession();
+  const { t } = useTranslation();
   const [players, setPlayers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -15,14 +17,12 @@ export default function ChurchPlayerListPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Step 1: Ambil profil user
       const { data: profile } = await supabase
         .from("profiles")
         .select("church_id, email, username")
         .eq("id", user.id)
         .single();
 
-      // Step 2: Sync email jika tiada
       if (!profile?.email) {
         const defaultUsername = profile?.username ?? user.user_metadata?.username ?? "Tanpa Nama";
         const { error } = await supabase.from("profiles").upsert({
@@ -34,7 +34,6 @@ export default function ChurchPlayerListPage() {
         else console.log("✅ Email synced to profiles");
       }
 
-      // Step 3: Jika ada church_id, fetch player
       if (profile?.church_id) {
         fetchPlayers(profile.church_id);
       }
@@ -53,7 +52,6 @@ export default function ChurchPlayerListPage() {
 
     const userIds = profileList.map(u => u.id);
 
-    // ✅ Guna view user_read_progress untuk accurate sync
     const { data: readCounts } = await supabase
       .from("user_read_progress")
       .select("user_id, total")
@@ -87,13 +85,13 @@ export default function ChurchPlayerListPage() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-6">
       <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">
-        Senarai Ahli Gereja 📖
+        {t("playerList.title")}
       </h1>
 
       <div className="mb-4 flex justify-center gap-4">
         <input
           type="text"
-          placeholder="Cari Nama Pengguna..."
+          placeholder={t("playerList.searchPlaceholder")}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full sm:w-64 px-4 py-2 rounded-xl border border-gray-300 bg-white text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
@@ -102,7 +100,7 @@ export default function ChurchPlayerListPage() {
           onClick={handleSearch}
           className="bg-blue-500 text-white px-4 py-2 rounded-xl"
         >
-          Cari
+          {t("playerList.searchBtn")}
         </button>
       </div>
 
@@ -130,13 +128,13 @@ export default function ChurchPlayerListPage() {
               <div className="font-medium">{user.username}</div>
               <div className="text-xs font-semibold mt-0.5">
                 {user.is_online ? (
-                  <span className="text-green-500">🟢 Online</span>
+                  <span className="text-green-500">{t("playerList.online")}</span>
                 ) : (
-                  <span className="text-gray-400">⚫ Offline</span>
+                  <span className="text-gray-400">{t("playerList.offline")}</span>
                 )}
               </div>
               <div className="text-xs text-gray-500 mb-1">
-                {user.chapters_read} Bab dibaca
+                {t("playerList.chaptersRead", { count: user.chapters_read })}
               </div>
               <div className="w-full bg-gray-200 h-2 rounded-full">
                 <div
@@ -165,10 +163,10 @@ export default function ChurchPlayerListPage() {
                     )}, jom baca Firman hari ini! 🔥`}
                     className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 hover:bg-green-200 transition"
                   >
-                    Poke
+                    {t("playerList.poke")}
                   </a>
                 ) : (
-                  <span className="text-xs text-gray-400 italic">Tiada email</span>
+                  <span className="text-xs text-gray-400 italic">{t("playerList.noEmail")}</span>
                 )}
               </div>
             )}

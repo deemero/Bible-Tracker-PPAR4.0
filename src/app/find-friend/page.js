@@ -5,36 +5,38 @@ import { supabase } from "@/lib/supabaseClient";
 import { useSession } from "@supabase/auth-helpers-react";
 import Image from "next/image";
 import toast from "react-hot-toast";
+import useTranslation from "@/hooks/useTranslation";
 
 export default function FindFriendPage() {
   const session = useSession();
   const [users, setUsers] = useState([]);
   const [friendIds, setFriendIds] = useState([]);
   const [search, setSearch] = useState("");
+  const { t } = useTranslation();
 
   useEffect(() => {
     const load = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
 
-      // ✅ Ambil semua kawan / pending
       const { data: existing } = await supabase
         .from("friends")
         .select("sender_id, receiver_id")
         .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`);
 
-      const allFriendIds = existing.map(f =>
+      const allFriendIds = existing.map((f) =>
         f.sender_id === user.id ? f.receiver_id : f.sender_id
       );
       setFriendIds(allFriendIds);
 
-      // ✅ Ambil semua user kecuali diri sendiri & kawan
       const { data: allUsers } = await supabase
         .from("profiles")
         .select("id, username, avatar_url")
         .neq("id", user.id);
 
-      const filtered = allUsers.filter(u => !allFriendIds.includes(u.id));
+      const filtered = allUsers.filter((u) => !allFriendIds.includes(u.id));
       setUsers(filtered);
     };
 
@@ -42,10 +44,11 @@ export default function FindFriendPage() {
   }, []);
 
   const handleAddFriend = async (targetId) => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return;
 
-    // ✅ Check kalau dah cukup 50 kawan
     const { data: existing } = await supabase
       .from("friends")
       .select("id")
@@ -53,34 +56,35 @@ export default function FindFriendPage() {
       .eq("status", "accepted");
 
     if (existing.length >= 50) {
-      toast.error("Had maksimum 50 kawan telah dicapai.");
+      toast.error(t("findFriend.errorLimit"));
       return;
     }
 
     const { error } = await supabase.from("friends").insert({
       sender_id: user.id,
       receiver_id: targetId,
-      status: "pending"
+      status: "pending",
     });
 
     if (error) {
-      toast.error("Gagal tambah kawan.");
+      toast.error(t("findFriend.errorAdd"));
       console.error(error);
     } else {
-      toast.success("Permintaan dihantar!");
-      // remove dari senarai
-      setUsers(users.filter(u => u.id !== targetId));
+      toast.success(t("findFriend.successAdd"));
+      setUsers(users.filter((u) => u.id !== targetId));
     }
   };
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6">
-      <h1 className="text-3xl font-bold text-center mb-6">Cari & Tambah Kawan 🤝</h1>
+      <h1 className="text-3xl font-bold text-center mb-6">
+        {t("findFriend.title")}
+      </h1>
 
       <div className="mb-4 flex justify-center">
         <input
           type="text"
-          placeholder="Cari nama pengguna..."
+          placeholder={t("findFriend.searchPlaceholder")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full sm:w-80 px-4 py-2 rounded-xl border border-gray-300 shadow focus:outline-none focus:ring-2 focus:ring-blue-400"
@@ -89,7 +93,9 @@ export default function FindFriendPage() {
 
       <div className="space-y-3">
         {users
-          .filter(user => user.username.toLowerCase().includes(search.toLowerCase()))
+          .filter((user) =>
+            user.username.toLowerCase().includes(search.toLowerCase())
+          )
           .map((user) => (
             <div
               key={user.id}
@@ -115,7 +121,7 @@ export default function FindFriendPage() {
                 onClick={() => handleAddFriend(user.id)}
                 className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold hover:bg-blue-600"
               >
-                Add Friend
+                {t("findFriend.addFriendBtn")}
               </button>
             </div>
           ))}

@@ -153,7 +153,7 @@ export default function ChurchDashboard() {
           <span className="flex items-center justify-center gap-2 mt-1">
             {isOnline && <CircleDot className="text-green-500 w-3 h-3" />} Online
           </span>
-          Anda berada dalam gereja: <span className="font-semibold text-green-600">{churchName}</span>
+          Church Mode : <span className="font-semibold text-green-600">{churchName}</span>
         </p>
       </div>
 
