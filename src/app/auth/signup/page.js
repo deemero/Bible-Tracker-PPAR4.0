@@ -53,12 +53,10 @@ export default function SignUp() {
 />
         </div>
 
-
         <h1
-  className="text-3xl sm:text-4xl font-extrabold text-center leading-snug 
-             bg-gradient-to-r from-green-400 via-emerald-400 to-green-600 
-             bg-clip-text text-transparent animate-pulse drop-shadow-[0_0_6px_rgba(34,197,94,0.6)]"
-  style={{ fontFamily: "'Baloo 2', cursive" }}
+  className="text-3xl sm:text-4xl font-extrabold text-center leading-snug
+             bg-gradient-to-r from-green-400 via-emerald-400 to-green-600
+             bg-clip-text text-transparent animate-pulse drop-shadow-[0_0_6px_rgba(34,197,94,0.6)] font-baloo"
 >
   Bible Revivalz
 </h1>

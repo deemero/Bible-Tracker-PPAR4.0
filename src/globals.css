@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&display=swap');
 
 /* Theme color variables */
 :root {
@@ -36,4 +37,11 @@ html,
 body,
 :root {
   height: 100%;
+}
+
+
+
+
+.font-baloo {
+  font-family: 'Baloo 2', sans-serif;
 }
