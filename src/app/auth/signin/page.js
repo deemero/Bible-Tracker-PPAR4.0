@@ -10,6 +10,7 @@ export default function SignIn() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const title = "Bible Revivalz";
 
   async function handleSignIn(e) {
     e.preventDefault();
@@ -42,23 +43,33 @@ export default function SignIn() {
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="bg-white p-8 rounded-2xl shadow-2xl w-[90%] max-w-md border border-green-100"
+        className="w-[90%] max-w-md p-6 sm:p-8 bg-transparent"
       >
-        {/* Logo at top */}
+        {/* Logo cun di atas */}
         <div className="flex justify-center mb-4">
-        <img
+        <motion.img
   src="/bpre.png"
   alt="Bible Revival Logo"
-  className="w-36 h-36 object-contain rounded-full shadow-md"
+  className="w-36 h-36 object-contain rounded-full shadow-[0_8px_20px_rgba(0,128,0,0.2)]"
+  animate={{ scale: [1, 1.05, 1], opacity: [0.9, 1, 0.9] }}
+  transition={{
+    duration: 2,
+    repeat: Infinity,
+    ease: "easeInOut"
+  }}
 />
 
         </div>
 
-        <h1 className="text-3xl font-bold text-center text-green-600 leading-snug">
-          Bible Revivalz
-          <br />
-          <span className="text-gray-600 text-sm font-medium">Revival Generation</span>
-        </h1>
+
+        <h1
+  className="text-3xl sm:text-4xl font-extrabold text-center leading-snug 
+             bg-gradient-to-r from-green-400 via-emerald-400 to-green-600 
+             bg-clip-text text-transparent animate-pulse drop-shadow-[0_0_6px_rgba(34,197,94,0.6)]"
+>
+  Bible Revivalz
+</h1>
+
 
         <p className="text-gray-500 text-center text-sm mt-2 mb-4">
           Enter your login credentials to continue
@@ -72,7 +83,7 @@ export default function SignIn() {
             <input
               type="email"
               placeholder="you@example.com"
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-400"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-400 bg-white/80"
               onChange={(e) => setEmail(e.target.value)}
               required
             />
@@ -83,7 +94,7 @@ export default function SignIn() {
             <input
               type="password"
               placeholder="••••••••"
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-400"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-400 bg-white/80"
               onChange={(e) => setPassword(e.target.value)}
               required
             />
