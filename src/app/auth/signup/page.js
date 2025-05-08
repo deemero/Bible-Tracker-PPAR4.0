@@ -46,26 +46,19 @@ export default function SignUp() {
       >
         {/* Logo di atas */}
         <div className="flex justify-center mb-4">
-        <motion.img
+        <img
   src="/bpre.png"
   alt="Bible Revival Logo"
-  className="w-36 h-36 object-contain rounded-full shadow-[0_8px_20px_rgba(0,128,0,0.2)]"
-  animate={{ scale: [1, 1.05, 1], opacity: [0.9, 1, 0.9] }}
-  transition={{
-    duration: 2,
-    repeat: Infinity,
-    ease: "easeInOut"
-  }}
+  className="w-36 h-36 object-contain rounded-full"
 />
-
-
         </div>
 
 
-  <h1
+        <h1
   className="text-3xl sm:text-4xl font-extrabold text-center leading-snug 
              bg-gradient-to-r from-green-400 via-emerald-400 to-green-600 
              bg-clip-text text-transparent animate-pulse drop-shadow-[0_0_6px_rgba(34,197,94,0.6)]"
+  style={{ fontFamily: "'Baloo 2', cursive" }}
 >
   Bible Revivalz
 </h1>
