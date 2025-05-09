@@ -139,7 +139,7 @@ export default function SignUp() {
         </form>
 
         <p className="text-center text-sm text-gray-600 mt-5">
-          Sudah ada akaun?{" "}
+          already have account?{" "}
           <a href="/auth/signin" className="text-green-600 hover:underline font-medium">
             Sign In
           </a>

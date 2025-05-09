@@ -17,7 +17,6 @@ export default function SelectModePage() {
         setLoading(false);
       }
     };
-
     checkSession();
   }, []);
 
@@ -29,16 +28,19 @@ export default function SelectModePage() {
         initial={{ opacity: 0, scale: 0.9, y: 50 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="w-full max-w-md bg-white shadow-xl rounded-2xl p-8 text-center space-y-8"
+        className="w-full max-w-md backdrop-blur-xl bg-white/80 border border-green-200 shadow-2xl rounded-3xl p-8 text-center space-y-8"
       >
-        <motion.h1
-          initial={{ y: -10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="text-3xl font-extrabold text-green-700 tracking-tight"
-        >
-          👋 Select Mode
-        </motion.h1>
+  <motion.h1
+  initial={{ y: -10, opacity: 0 }}
+  animate={{ y: 0, opacity: 1 }}
+  transition={{ delay: 0.2 }}
+  className="text-4xl sm:text-5xl font-baloo font-extrabold text-center 
+             text-[#6FC276] drop-shadow-[0_0_6px_rgba(182,217,194,0.3)]"
+>
+  Select Mode
+</motion.h1>
+
+
 
         <motion.div
           className="flex flex-col gap-4"
@@ -52,9 +54,9 @@ export default function SelectModePage() {
         >
           <motion.button
             onClick={() => router.push("/join-church")}
-            className="w-full py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-semibold text-lg shadow-md transition"
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
+            className="w-full py-4 rounded-xl bg-green-500 hover:bg-green-600 text-white text-lg font-bold tracking-wide shadow-md transition-all duration-200"
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
             variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
           >
             ⛪ Join Church
@@ -62,12 +64,12 @@ export default function SelectModePage() {
 
           <motion.button
             onClick={() => router.push("/dashboard")}
-            className="w-full py-3 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold text-lg shadow transition"
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
+            className="w-full py-4 rounded-xl bg-white border border-gray-300 hover:bg-gray-100 text-gray-800 text-lg font-bold tracking-wide shadow transition-all duration-200"
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
             variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
           >
-            🙎‍♂️ Your Account
+            🙎‍♂️ Personal Account
           </motion.button>
         </motion.div>
       </motion.div>
