@@ -1,5 +1,6 @@
 
 'use client';
+import { supabase } from '@/lib/supabaseClient'; 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { BotIcon, ClipboardCopy } from 'lucide-react';
@@ -11,6 +12,32 @@ export default function AskAiPage() {
   const [loading, setLoading] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const { t } = useTranslation();
+  const [userId, setUserId] = useState(null);
+  const [userName, setUserName] = useState("");
+
+  useEffect(() => {
+  const fetchUserName = async () => {
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.getSession();
+
+    if (error || !session) return;
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("username")
+      .eq("id", session.user.id)
+      .single();
+
+    if (profile && !profileError) {
+      setUserId(session.user.id);
+      setUserName(profile.username); // update state
+    }
+  };
+
+  fetchUserName();
+}, []);
 
   useEffect(() => {
     const dismissed = localStorage.getItem('ai_welcome_dismissed');
@@ -45,7 +72,7 @@ export default function AskAiPage() {
         transition={{ duration: 0.6 }}
         className="text-3xl sm:text-5xl font-bold bg-gradient-to-r from-green-500 to-green-700 bg-clip-text text-transparent"
       >
-        Hello, <span className="font-extrabold">Deemero</span>
+        Hello, <span className="font-extrabold"> {userName}</span>
       </motion.h1>
 
       <motion.div
