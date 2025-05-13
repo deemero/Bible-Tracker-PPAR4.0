@@ -30,6 +30,7 @@ export default function RootLayout({ children }) {
           <ClientLayout>{children}</ClientLayout>
         </AutoLogoutProvider>
         <SpeedInsights />
+          <Analytics /> 
       </body>
     </html>
   );
