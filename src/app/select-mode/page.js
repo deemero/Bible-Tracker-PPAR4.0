@@ -59,7 +59,7 @@ export default function SelectModePage() {
             whileTap={{ scale: 0.96 }}
             variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
           >
-            ⛪ Join Church
+             Join Church
           </motion.button>
 
           <motion.button
@@ -69,8 +69,19 @@ export default function SelectModePage() {
             whileTap={{ scale: 0.96 }}
             variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
           >
-            🙎‍♂️ Personal Account
+            Personal Account
           </motion.button>
+
+         <motion.button
+  onClick={() => router.push("https://bible-quiz-revival.vercel.app/")}
+  className="w-full py-4 mb-4 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-lg font-semibold shadow-lg hover:scale-105 transition-transform duration-200"
+  whileHover={{ scale: 1.04 }}
+  whileTap={{ scale: 0.96 }}
+>
+  Bible Quiz Revival 
+
+</motion.button>
+
         </motion.div>
       </motion.div>
     </div>
