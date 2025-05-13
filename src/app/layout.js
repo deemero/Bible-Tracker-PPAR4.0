@@ -4,6 +4,7 @@ import ClientLayout from "@/components/ClientLayout";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Toaster } from "react-hot-toast";
 import AutoLogoutProvider from "@/components/AutoLogoutProvider";
+import { Analytics } from "@vercel/analytics/next"
 
 export const metadata = {
   title: "Bible Revivalz",
