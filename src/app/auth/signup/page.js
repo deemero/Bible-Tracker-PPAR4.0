@@ -1,8 +1,11 @@
 "use client";
+import { Eye, EyeOff } from "lucide-react";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
+
 
 export default function SignUp() {
   const [email, setEmail] = useState("");
@@ -12,6 +15,8 @@ export default function SignUp() {
   const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
+
 
   async function handleSignUp(e) {
     e.preventDefault();
@@ -45,18 +50,17 @@ export default function SignUp() {
         className="w-[90%] max-w-md p-6 sm:p-8 bg-transparent"
       >
         {/* Logo di atas */}
-        <div className="flex justify-center mb-4">
+        {/* <div className="flex justify-center mb-4">
         <img
   src="/bpre.png"
   alt="Bible Revival Logo"
   className="w-36 h-36 object-contain rounded-full"
 />
-        </div>
+        </div> */}
 
-        <h1
+<h1
   className="text-3xl sm:text-4xl font-extrabold text-center leading-snug
-             bg-gradient-to-r from-green-400 via-emerald-400 to-green-600
-             bg-clip-text text-transparent animate-pulse drop-shadow-[0_0_6px_rgba(34,197,94,0.6)] font-baloo"
+             text-green-600 drop-shadow-md tracking-tight"
 >
   Bible Revivalz
 </h1>
@@ -92,16 +96,23 @@ export default function SignUp() {
             />
           </div>
 
-          <div>
-            <label className="block text-sm text-gray-700 font-medium mb-1">Password</label>
-            <input
-              type="password"
-              placeholder="••••••••"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-400 bg-white/80"
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
+       <div className="relative">
+  <label className="block text-sm text-gray-700 font-medium mb-1">Password</label>
+  <input
+    type={showPassword ? "text" : "password"}
+    placeholder="••••••••"
+    className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-400 bg-white/80"
+    onChange={(e) => setPassword(e.target.value)}
+    required
+  />
+  <button
+    type="button"
+    onClick={() => setShowPassword(!showPassword)}
+    className="absolute top-[38px] right-3 text-gray-500 hover:text-green-600"
+  >
+    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+  </button>
+</div>
 
           <button
             type="submit"
